@@ -1,0 +1,95 @@
+---
+
+- name: Update apt cache.
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  ignore_errors: true
+
+- name: Install apt dependencies.
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ app_pubmed_ingester.dependencies_apt }}"
+
+- name: Create service group.
+  group:
+    state: present
+    name: "{{ app_pubmed_ingester.group }}"
+
+- name: Create service user.
+  user:
+    state: present
+    name: "{{ app_pubmed_ingester.user }}"
+    createhome: yes
+    group: "{{ app_pubmed_ingester.group }}"
+    shell: "/bin/false"
+
+- name: Create application directories.
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0755
+  with_items:
+    - "{{ app_pubmed_ingester.share_dir }}"
+    - "{{ app_pubmed_ingester.config_dir }}"
+    - "{{ app_pubmed_ingester.run_dir }}"
+    - "{{ app_pubmed_ingester.log_dir }}"
+
+- name: Install system-level Python dependencies
+  pip:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - pip==9.0.1
+    - setuptools==36.2.7
+    - virtualenv==15.1.0
+
+- name: Install deployment-level pip dependencies not included in a `requirements.txt` within the virtual environment
+  pip:
+    name: "{{ item }}"
+    state: latest
+    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv_python: python3.5
+  with_items: "{{ app_pubmed_ingester.dependencies_pip }}"
+
+- name: Checkout the project source code from Git
+  git:
+    repo: "http://sunny.diskstation.me:30000/bearnd/pubmed-ingester.git"
+    dest: "{{ app_pubmed_ingester.share_dir }}/src"
+    depth: 1
+    force: yes
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+
+- name: Create configuration file
+  template:
+    src: "config.json.j2"
+    dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
+    owner: "{{ app_pubmed_ingester.user }}"
+    group: "{{ app_pubmed_ingester.group }}"
+    mode: 0600
+
+- name: Install Python package requirements (Production)
+  pip:
+    chdir: "{{ app_pubmed_ingester.share_dir }}/src/"
+    requirements: requirements.txt
+    state: present
+    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv_python: python2.7
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+
+- name: Install Python package requirements (Vagrant)
+  pip:
+    chdir: "/home/vagrant/pubmed-ingester"
+    requirements: requirements_dev.txt
+    state: present
+    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv_python: python2.7
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+
+- name: Create init script for the `pubmed-ingester` service
+  template: src=pubmed-parser.j2 dest=/etc/init/pubmed-ingester.conf
+  notify:
+    - restart pubmed-ingester
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False

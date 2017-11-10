@@ -1,0 +1,47 @@
+---
+
+# PostgreSQL Server Settings.
+postgresql_python_library: "python-psycopg2"
+
+# PostgreSQL Server Databases.
+postgresql_databases:
+  - name: "pubmed"
+  - name: "test"
+# PostgreSQL Server Users.
+postgresql_users:
+  - name: "pubmed_ingester"
+    password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
+
+app_pubmed_ingester:
+
+  # Application user settings.
+  user: pubmed_ingester
+  group: pubmed_ingester
+
+  # Application directories.
+  config_dir: /etc/pubmed-ingester
+  share_dir: /usr/local/share/pubmed-ingester
+  run_dir: /var/run/pubmed-ingester
+  log_dir: /var/log/pubmed-ingester
+  virtual_env_dir: /usr/local/share/pubmed-ingester/venvs/pubmed-ingester
+
+  # Gunicorn Configuration Settings.
+  gunicorn:
+    host: "127.0.0.1"
+    port: 5555
+    workers: 4
+    worker_class: sync
+
+  # Application Configuration Settings.
+  config:
+
+    # General Settings.
+    logger_level: DEBUG
+
+    # PostgreSQL Server Configuration Settings.
+    sql_host: "localhost"
+    sql_port: 5243
+    sql_username: "pubmed_ingester"
+    sql_password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
+    sql_db: "pubmed"
+

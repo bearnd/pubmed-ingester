@@ -1,0 +1,21 @@
+---
+
+app_pubmed_ingester:
+
+  dependencies_apt:
+    - git
+    - htop
+    - build-essential
+    - python3-dev
+    - python3-pip
+    - libxslt1-dev
+    - libxml2-dev
+    - libssl-dev
+    - libffi-dev
+    - python-lxml
+    - python3-psycopg2
+
+  dependencies_pip:
+    - ipython==6.1.0
+    - gunicorn==19.7.1
+

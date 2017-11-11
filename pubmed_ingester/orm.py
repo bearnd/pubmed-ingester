@@ -147,8 +147,9 @@ class Affiliation(Base, OrmBase):
 
     # Relationship to a list of `Author` records.
     authors = sqlalchemy.orm.relationship(
-        argument="ArticleAuthor",
-        back_populates="affiliations"
+        argument="Author",
+        secondary="AuthorAffiliation",
+        back_populates="affiliations",
     )
 
 
@@ -658,7 +659,35 @@ class Author(Base, OrmBase):
     # Relationship to a list of `Affiliation` records.
     affiliations = sqlalchemy.orm.relationship(
         argument="Affiliation",
+        secondary="AuthorAffiliation",
         back_populates="authors"
+    )
+
+
+class AuthorAffiliation(Base, OrmBase):
+    """Associative table between `Author` and `Affiliation` records."""
+
+    # set table name
+    __tablename__ = "author_affiliations"
+
+    # Autoincrementing primary key ID.
+    author_affiliation_id = sqlalchemy.Column(
+        name="author_affiliation_id",
+        type_=sqlalchemy.types.BigInteger(),
+        primary_key=True,
+        autoincrement="auto",
+    )
+
+    # Foreign key to the author ID.
+    author_id = sqlalchemy.Column(
+        sqlalchemy.ForeignKey("authors.author_id"),
+        name="author_id",
+    )
+
+    # Foreign key to the affiliation ID.
+    affiliation_id = sqlalchemy.Column(
+        sqlalchemy.ForeignKey("affiliations.affiliation_id"),
+        name="affiliation_id",
     )
 
 

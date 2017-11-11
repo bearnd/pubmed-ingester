@@ -148,7 +148,14 @@ class Affiliation(Base, OrmBase):
     # Relationship to a list of `Author` records.
     authors = sqlalchemy.orm.relationship(
         argument="Author",
-        secondary="AuthorAffiliation",
+        secondary="ArticleAuthorAffiliation",
+        back_populates="affiliations",
+    )
+
+    # Relationship to a list of `Author` records.
+    articles = sqlalchemy.orm.relationship(
+        argument="Article",
+        secondary="ArticleAuthorAffiliation",
         back_populates="affiliations",
     )
 
@@ -266,7 +273,7 @@ class Article(Base, OrmBase):
     # Relationship to a list of `Author` records.
     authors = sqlalchemy.orm.relationship(
         argument="Author",
-        secondary="ArticleAuthor",
+        secondary="ArticleAuthorAffiliation",
         back_populates="articles",
     )
 
@@ -288,6 +295,13 @@ class Article(Base, OrmBase):
         argument="PublicationType",
         secondary="ArticlePublicationType",
         back_populates="articles"
+    )
+
+    # Relationship to a list of `Author` records.
+    affiliations = sqlalchemy.orm.relationship(
+        argument="Affiliation",
+        secondary="ArticleAuthorAffiliation",
+        back_populates="articles",
     )
 
 
@@ -325,15 +339,16 @@ class ArticleAbstractText(Base, OrmBase):
     )
 
 
-class ArticleAuthor(Base, OrmBase):
-    """Associative table between `Article` and `Author` records."""
+class ArticleAuthorAffiliation(Base, OrmBase):
+    """Associative table between `Article`, `Author`, and `Affiliation`
+     records."""
 
     # set table name
-    __tablename__ = "article_authors"
+    __tablename__ = "article_author_affiliations"
 
     # Autoincrementing primary key ID.
-    article_author_id = sqlalchemy.Column(
-        name="article_author_id",
+    article_author_affiliation_id = sqlalchemy.Column(
+        name="article_author_affiliation_id",
         type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
@@ -351,23 +366,17 @@ class ArticleAuthor(Base, OrmBase):
         name="author_id",
     )
 
-    # Ordinance of the author in the article.
-    ordinance = sqlalchemy.Column(
-        name="ordinance",
-        type_=sqlalchemy.types.SmallInteger(),
-        nullable=False,
-    )
-
-    # Foreign key to the author affiliation ID.
+    # Foreign key to the author ID.
     affiliation_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("affiliations.affiliation_id"),
         name="affiliation_id",
     )
 
-    # Relationship to an `Affiliation` record.
-    affiliation = sqlalchemy.orm.relationship(
-        argument="Affiliation",
-        back_populates="authors"
+    # Ordinance of the author in the article.
+    ordinance = sqlalchemy.Column(
+        name="ordinance",
+        type_=sqlalchemy.types.SmallInteger(),
+        nullable=False,
     )
 
 
@@ -652,42 +661,15 @@ class Author(Base, OrmBase):
     # Relationship to a list of `Article` records.
     articles = sqlalchemy.orm.relationship(
         argument="Article",
-        secondary="ArticleAuthor",
+        secondary="ArticleAuthorAffiliation",
         back_populates="authors"
     )
 
     # Relationship to a list of `Affiliation` records.
     affiliations = sqlalchemy.orm.relationship(
         argument="Affiliation",
-        secondary="AuthorAffiliation",
+        secondary="ArticleAuthorAffiliation",
         back_populates="authors"
-    )
-
-
-class AuthorAffiliation(Base, OrmBase):
-    """Associative table between `Author` and `Affiliation` records."""
-
-    # set table name
-    __tablename__ = "author_affiliations"
-
-    # Autoincrementing primary key ID.
-    author_affiliation_id = sqlalchemy.Column(
-        name="author_affiliation_id",
-        type_=sqlalchemy.types.BigInteger(),
-        primary_key=True,
-        autoincrement="auto",
-    )
-
-    # Foreign key to the author ID.
-    author_id = sqlalchemy.Column(
-        sqlalchemy.ForeignKey("authors.author_id"),
-        name="author_id",
-    )
-
-    # Foreign key to the affiliation ID.
-    affiliation_id = sqlalchemy.Column(
-        sqlalchemy.ForeignKey("affiliations.affiliation_id"),
-        name="affiliation_id",
     )
 
 

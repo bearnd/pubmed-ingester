@@ -8,6 +8,7 @@ ujson==1.35
 validictory==1.1.1
 attrdict==2.0.0
 decorator==4.1.2
+psycopg2==2.7.3.2
 SQLAlchemy==1.1.5
 chardet==3.0.4
 coverage==4.1

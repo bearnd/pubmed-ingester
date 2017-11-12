@@ -6,17 +6,13 @@ postgresql_python_library: "python-psycopg2"
 # PostgreSQL Server Databases.
 postgresql_databases:
   - name: "pubmed"
-    login_host: "*"
     port: 5432
   - name: "test"
-    login_host: "*"
     port: 5432
 # PostgreSQL Server Users.
 postgresql_users:
   - name: "pubmed_ingester"
     password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
-    login_password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
-    login_host: "*"
     port: 5432
 
 app_pubmed_ingester:

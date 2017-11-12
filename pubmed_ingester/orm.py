@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 import enum
+import hashlib
 
 import sqlalchemy
 import sqlalchemy.orm
@@ -662,6 +663,13 @@ class Author(Base, OrmBase):
         type_=sqlalchemy.types.Unicode(),
     )
 
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True
+    )
+
     # Relationship to a list of `Article` records.
     articles = sqlalchemy.orm.relationship(
         argument="Article",
@@ -675,6 +683,38 @@ class Author(Base, OrmBase):
         secondary="article_author_affiliations",
         back_populates="authors"
     )
+
+    def name_full(self):
+        name = " ".join([
+            str(self.name_first),
+            str(self.name_initials),
+            str(self.name_last),
+            str(self.name_suffix)
+        ])
+        return name
+
+    @sqlalchemy.orm.validates(
+        "name_first",
+        "name_initials",
+        "name_last",
+        "name_suffix",
+    )
+    def update_author_md5(self, key, value):
+
+        # Set the provided `value` to the `key`.
+        setattr(self, key, value)
+
+        # Retrieve the full concatenated name.
+        name = self.name_full()
+
+        # Encode the full concatenated name to UTF8 (in case it contains
+        # unicode characters).
+        name_encoded = name.encode("utf-8")
+
+        # Calculate the MD5 hash of the full concatenated name and store it
+        # under the `md5` attribute.
+        md5 = hashlib.md5(name_encoded).digest()
+        self.md5 = md5
 
 
 class Chemical(Base, OrmBase):

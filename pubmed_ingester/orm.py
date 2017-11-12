@@ -151,6 +151,14 @@ class Affiliation(Base, OrmBase):
         type_=sqlalchemy.types.Unicode(),
     )
 
+    # MD5 hash of the `affiliation` field.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True
+    )
+
     # Relationship to a list of `Author` records.
     authors = sqlalchemy.orm.relationship(
         argument="Author",
@@ -164,6 +172,20 @@ class Affiliation(Base, OrmBase):
         secondary="article_author_affiliations",
         back_populates="affiliations",
     )
+
+    @sqlalchemy.orm.validates("affiliation")
+    def update_affiliation_md5(self, key, value):
+
+        # Encode the `affiliation` attribute to UTF8 (in case it contains
+        # unicode characters).
+        affiliation_encoded = self.affiliation.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded affiliation and store it
+        # under the `md5` attribute.
+        md5 = hashlib.md5(affiliation_encoded).digest()
+        self.md5 = md5
+
+        return value
 
 
 class Article(Base, OrmBase):
@@ -663,6 +685,7 @@ class Author(Base, OrmBase):
         type_=sqlalchemy.types.Unicode(),
     )
 
+    # MD5 hash of the author's full name.
     md5 = sqlalchemy.Column(
         name="md5",
         type_=sqlalchemy.types.Binary(),
@@ -701,9 +724,6 @@ class Author(Base, OrmBase):
     )
     def update_author_md5(self, key, value):
 
-        # Set the provided `value` to the `key`.
-        setattr(self, key, value)
-
         # Retrieve the full concatenated name.
         name = self.name_full()
 
@@ -711,10 +731,12 @@ class Author(Base, OrmBase):
         # unicode characters).
         name_encoded = name.encode("utf-8")
 
-        # Calculate the MD5 hash of the full concatenated name and store it
-        # under the `md5` attribute.
+        # Calculate the MD5 hash of the encoded full concatenated name and store
+        # it under the `md5` attribute.
         md5 = hashlib.md5(name_encoded).digest()
         self.md5 = md5
+
+        return value
 
 
 class Chemical(Base, OrmBase):

@@ -806,23 +806,23 @@ class Citation(Base, OrmBase):
     )
 
     # Citation creation date (referring to either the `<DateCreated>` element).
-    dt_created = sqlalchemy.Column(
-        name="dt_created",
+    date_created = sqlalchemy.Column(
+        name="date_created",
         type_=sqlalchemy.types.Date(),
         nullable=True,
     )
 
     # Citation completion date (referring to either the `<DateCompleted>`
     # element).
-    dt_completion = sqlalchemy.Column(
-        name="dt_completion",
+    date_completion = sqlalchemy.Column(
+        name="date_completion",
         type_=sqlalchemy.types.Date(),
         nullable=True,
     )
 
     # Citation revision date (referring to the `<DateRevised>` element).
-    dt_revision = sqlalchemy.Column(
-        name="dt_revision",
+    date_revision = sqlalchemy.Column(
+        name="date_revision",
         type_=sqlalchemy.types.Date(),
         nullable=True,
     )

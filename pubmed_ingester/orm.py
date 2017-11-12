@@ -7,8 +7,6 @@ import enum
 import sqlalchemy
 import sqlalchemy.orm
 import sqlalchemy.types
-import sqlalchemy.dialects
-import sqlalchemy.dialects.mysql
 
 from .orm_base import Base, OrmBase
 
@@ -100,6 +98,13 @@ class AbstractText(Base, OrmBase):
         nullable=True,
     )
 
+    # Relationship to an `Article` record.
+    article = sqlalchemy.orm.relationship(
+        argument="Article",
+        secondary="article_abstract_texts",
+        back_populates="abstract_texts"
+    )
+
 
 class AccessionNumber(Base, OrmBase):
     """Table of `<AccessionNumber>` element records."""
@@ -148,14 +153,14 @@ class Affiliation(Base, OrmBase):
     # Relationship to a list of `Author` records.
     authors = sqlalchemy.orm.relationship(
         argument="Author",
-        secondary="ArticleAuthorAffiliation",
+        secondary="article_author_affiliations",
         back_populates="affiliations",
     )
 
-    # Relationship to a list of `Author` records.
+    # Relationship to a list of `Article` records.
     articles = sqlalchemy.orm.relationship(
         argument="Article",
-        secondary="ArticleAuthorAffiliation",
+        secondary="article_author_affiliations",
         back_populates="affiliations",
     )
 
@@ -263,17 +268,21 @@ class Article(Base, OrmBase):
     )
 
     # Relationship to a `Journal` record.
-    journal = sqlalchemy.orm.relationship("Journal")
+    journal = sqlalchemy.orm.relationship(
+        argument="Journal"
+    )
 
+    # Relationship to a list of `AbstractText` records.
     abstract_texts = sqlalchemy.orm.relationship(
         argument="AbstractText",
-        secondary="ArticleAbstractText",
+        secondary="article_abstract_texts",
+        back_populates="article"
     )
 
     # Relationship to a list of `Author` records.
     authors = sqlalchemy.orm.relationship(
         argument="Author",
-        secondary="ArticleAuthorAffiliation",
+        secondary="article_author_affiliations",
         back_populates="articles",
     )
 
@@ -286,21 +295,21 @@ class Article(Base, OrmBase):
     # Relationship to a list of `Grant` records.
     grants = sqlalchemy.orm.relationship(
         argument="Grant",
-        secondary="ArticleGrant",
+        secondary="article_grants",
         back_populates="articles"
     )
 
     # Relationship to a list of `PublicationType` records.
     publication_types = sqlalchemy.orm.relationship(
         argument="PublicationType",
-        secondary="ArticlePublicationType",
+        secondary="article_publication_types",
         back_populates="articles"
     )
 
     # Relationship to a list of `Author` records.
     affiliations = sqlalchemy.orm.relationship(
         argument="Affiliation",
-        secondary="ArticleAuthorAffiliation",
+        secondary="article_author_affiliations",
         back_populates="articles",
     )
 
@@ -413,6 +422,7 @@ class ArticleDatabankAccessionNumber(Base, OrmBase):
         name="accession_number_id",
     )
 
+    # Relationship to an `Article` record.
     article = sqlalchemy.orm.relationship(
         argument="Article",
         back_populates="databank_accession_numbers"
@@ -559,12 +569,6 @@ class CitationIdentifier(Base, OrmBase):
         type_=sqlalchemy.types.Unicode(),
     )
 
-    # Relationship to an `Citation` records.
-    citation = sqlalchemy.orm.relationship(
-        argument="Citation",
-        back_populates="identifiers",
-    )
-
 
 class CitationKeyword(Base, OrmBase):
     """Associative table between `Citation` and `Keyword` records."""
@@ -661,14 +665,14 @@ class Author(Base, OrmBase):
     # Relationship to a list of `Article` records.
     articles = sqlalchemy.orm.relationship(
         argument="Article",
-        secondary="ArticleAuthorAffiliation",
+        secondary="article_author_affiliations",
         back_populates="authors"
     )
 
     # Relationship to a list of `Affiliation` records.
     affiliations = sqlalchemy.orm.relationship(
         argument="Affiliation",
-        secondary="ArticleAuthorAffiliation",
+        secondary="article_author_affiliations",
         back_populates="authors"
     )
 
@@ -703,16 +707,16 @@ class Chemical(Base, OrmBase):
         index=True,
     )
 
-    # Publication type name (referring to the `<NameOfSubstance>` element).
-    name = sqlalchemy.Column(
-        name="name",
+    # Chemical name (referring to the `<NameOfSubstance>` element).
+    chemical = sqlalchemy.Column(
+        name="chemical",
         type_=sqlalchemy.types.Unicode(),
     )
 
     # Relationship to a list of `Citation` records.
-    articles = sqlalchemy.orm.relationship(
+    citations = sqlalchemy.orm.relationship(
         argument="Citation",
-        secondary="CitationChemical",
+        secondary="citation_chemicals",
         back_populates="chemicals"
     )
 
@@ -795,21 +799,25 @@ class Citation(Base, OrmBase):
     # Relationship to a list of `Identifier` records.
     identifiers = sqlalchemy.orm.relationship(
         argument="CitationIdentifier",
-        back_populates="citation"
     )
 
     # Relationship to a list of `Chemical` records.
     chemicals = sqlalchemy.orm.relationship(
         argument="Chemical",
-        secondary="CitationChemical",
-        back_populates="citation"
+        secondary="citation_chemicals",
+        back_populates="citations"
     )
 
     # Relationship to a list of `Keyword` records.
     keywords = sqlalchemy.orm.relationship(
         argument="Keyword",
-        secondary="CitationKeyword",
+        secondary="citation_keywords",
         back_populates="citations"
+    )
+
+    # # Relationship to a list of `Keyword` records.
+    descriptors_qualifiers = sqlalchemy.orm.relationship(
+        argument="CitationDescriptorQualifier",
     )
 
 
@@ -910,9 +918,9 @@ class Grant(Base, OrmBase):
     )
 
     # Relationship to a list of `Article` records.
-    grants = sqlalchemy.orm.relationship(
+    articles = sqlalchemy.orm.relationship(
         argument="Article",
-        secondary="ArticleGrant",
+        secondary="article_grants",
         back_populates="grants"
     )
 
@@ -1029,7 +1037,7 @@ class Keyword(Base, OrmBase):
     # Relationship to a list of `Citation` records.
     citations = sqlalchemy.orm.relationship(
         argument="Citation",
-        secondary="CitationKeyword",
+        secondary="citation_keywords",
         back_populates="keywords",
     )
 
@@ -1066,7 +1074,7 @@ class PublicationType(Base, OrmBase):
     # Relationship to a list of `Article` records.
     articles = sqlalchemy.orm.relationship(
         argument="Article",
-        secondary="ArticlePublicationType",
+        secondary="article_publication_types",
         back_populates="publication_types"
     )
 

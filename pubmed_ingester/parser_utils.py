@@ -94,6 +94,9 @@ def clean_orcid_identifier(orcid_identifier_raw):
 
     orcid_identifier_clean = None
 
+    if orcid_identifier_raw is None:
+        return orcid_identifier_clean
+
     match = regex_orcid.search(orcid_identifier_raw)
 
     if match is None:

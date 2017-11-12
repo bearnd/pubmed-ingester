@@ -4,11 +4,12 @@ from __future__ import unicode_literals
 
 import inspect
 import datetime
+import binascii
 
 import sqlalchemy
 import sqlalchemy.sql.sqltypes
 import sqlalchemy.types
-# import sqlalchemy.dialects.mysql
+
 import uuid
 import decimal
 from sqlalchemy.ext.declarative import declarative_base
@@ -20,8 +21,8 @@ Base = declarative_base()
 class OrmBase(object):
     # take sqla type and value, produce converted value
     _sqla_types_convert = {
-        sqlalchemy.types.BINARY: lambda t, v: v.encode("hex"),
-        sqlalchemy.sql.sqltypes.BINARY: lambda t, v: v.encode("hex"),
+        bytes: lambda t, v: binascii.hexlify(v),
+        sqlalchemy.types.Binary: lambda t, v: binascii.hexlify(v),
     }
 
     _python_instance_convert = {
@@ -178,15 +179,5 @@ class OrmBase(object):
 
         return msg.format(*values)
 
-    def __unicode__(self):
-        """Returns a unicode string representation of the object"""
-
-        return self.to_string(deep=False)
-
-    def __str__(self):
-        """Returns a byte-string representation of the object"""
-
-        return self.__unicode__().encode('utf-8')
-
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return self.to_string(deep=False)

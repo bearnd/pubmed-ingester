@@ -7,6 +7,7 @@ from lxml import etree
 from .loggers import create_logger
 from .parser_utils import parse_date_element
 from .parser_utils import convert_yn_boolean
+from .parser_utils import clean_orcid_identifier
 
 
 class ParserXmlBase(object):
@@ -16,6 +17,26 @@ class ParserXmlBase(object):
             logger_name=type(self).__name__,
             logger_level=kwargs.get("logger_level", "DEBUG")
         )
+
+    @staticmethod
+    def _et(element):
+        """Extracts the element text (ET)"""
+
+        text = None
+        if element is not None:
+            text = element.text
+
+        return text
+
+    @staticmethod
+    def _eav(element, attribute):
+        """Extracts the element attrbiute value (EAV)"""
+
+        value = None
+        if element is not None:
+            value = element.get(attribute)
+
+        return value
 
     @staticmethod
     def generate_xml_elements(file_xml, element_tag=None):
@@ -58,178 +79,308 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         super(ParserXmlPubmedArticle).__init__(kwargs=kwargs)
 
-    @staticmethod
-    def _et(element):
-        """Extracts the element text (ET)"""
+    def parse_medline_journal_info(self, element):
 
-        text = None
-        if element is not None:
-            text = element.text
-
-        return text
-
-    @staticmethod
-    def _eav(element, attribute):
-        """Extracts the element attrbiute value (EAV)"""
-
-        value = None
-        if element is not None:
-            value = element.get(attribute)
-
-        return value
-
-    def parse_medline_journal_info(self, element_medline_journal_info):
-
-        if element_medline_journal_info is None:
+        if element is None:
             return {}
 
         medline_journal_info = {
-            "Country": self._et(
-                element_medline_journal_info.find("Country")
-            ),
-            "MedlineTA": self._et(
-                element_medline_journal_info.find("MedlineTA")
-            ),
-            "NlmUniqueID": self._et(
-                element_medline_journal_info.find("NlmUniqueID")
-            ),
-            "ISSNLinking": self._et(
-                element_medline_journal_info.find("ISSNLinking")
-            ),
+            "Country": self._et(element.find("Country")),
+            "MedlineTA": self._et(element.find("MedlineTA")),
+            "NlmUniqueID": self._et(element.find("NlmUniqueID")),
+            "ISSNLinking": self._et(element.find("ISSNLinking")),
         }
 
         return medline_journal_info
 
-    def parse_chemical(self, element_chemical):
+    def parse_chemical(self, element):
 
-        if element_chemical is None:
+        if element is None:
             return {}
 
         chemical = {
-            "RegistryNumber": self._et(element_chemical.find("RegistryNumber")),
+            "RegistryNumber": self._et(element.find("RegistryNumber")),
             "NameOfSubstance": {
-                "UI": self._eav(element_chemical.find("NameOfSubstance"), "UI"),
-                "NameOfSubstance": self._et(element_chemical.find(
-                    "NameOfSubstance")
-                ),
+                "UI": self._eav(element.find("NameOfSubstance"), "UI"),
+                "NameOfSubstance": self._et(element.find("NameOfSubstance")),
             },
         }
 
         return chemical
 
-    def parse_chemical_list(self, element_chemical_list):
+    def parse_chemical_list(self, element):
 
         chemicals = []
 
-        if element_chemical_list is None:
+        if element is None:
             return chemicals
 
-        for element_chemical in element_chemical_list.getchildren():
-            chemical = self.parse_chemical(element_chemical=element_chemical)
+        for _element in element.getchildren():
+            chemical = self.parse_chemical(_element)
             chemicals.append(chemical)
 
         return chemicals
 
-    def parse_mesh_entry(self, element_mesh_entry, entry_name):
+    def parse_mesh_entry(self, element, entry_name):
 
         mesh_entry = {}
 
-        if element_mesh_entry is None:
+        if element is None:
             return mesh_entry
 
         mesh_entry = {
-            entry_name: self._et(element_mesh_entry),
-            "UI": self._eav(element_mesh_entry, "UI"),
-            "MajorTopicYN": self._eav(element_mesh_entry, "MajorTopicYN"),
+            entry_name: self._et(element),
+            "UI": self._eav(element, "UI"),
+            "MajorTopicYN": self._eav(element, "MajorTopicYN"),
         }
 
         mesh_entry["IsMajorTopic"] = convert_yn_boolean(
-            yn_boolean_raw=mesh_entry["MajorTopicYN"]
+            mesh_entry["MajorTopicYN"]
         )
 
         return mesh_entry
 
-    def parse_mesh_descriptor(self, element_mesh_descriptor):
+    def parse_mesh_descriptor(self, element):
 
         mesh_descriptor = self.parse_mesh_entry(
-            element_mesh_entry=element_mesh_descriptor,
+            element=element,
             entry_name="DescriptorName"
         )
 
         return mesh_descriptor
 
-    def parse_mesh_qualifier(self, element_mesh_qualifier):
+    def parse_mesh_qualifier(self, element):
 
         mesh_descriptor = self.parse_mesh_entry(
-            element_mesh_entry=element_mesh_qualifier,
+            element=element,
             entry_name="QualifierName"
         )
 
         return mesh_descriptor
 
-    def parse_mesh_heading(self, element_mesh_heading):
+    def parse_mesh_heading(self, element):
 
-        if element_mesh_heading is None:
+        if element is None:
             return {}
 
         mesh_heading = {
             "DescriptorName": self.parse_mesh_descriptor(
-                element_mesh_heading.find("DescriptorName")
+                element.find("DescriptorName")
             ),
-            "QualifierList": [
-                self.parse_mesh_qualifier(
-                    element_mesh_qualifier=qualifier for qualifier in
-                    element_mesh_heading.findall("QualifierName")
+            "Qualifiers": [{
+                "Qualifier": self.parse_mesh_qualifier(
+                    _element for _element in
+                    element.findall("Qualifier")
                 )
-            ]
+            }]
         }
 
         return mesh_heading
 
-    def parse_mesh_heading_list(self, element_mesh_heading_list):
+    def parse_mesh_heading_list(self, element):
 
         mesh_headings = []
 
-        if element_mesh_heading_list is None:
+        if element is None:
             return mesh_headings
 
-        for element_mesh_heading in element_mesh_heading_list.getchildren():
-            mesh_heading = self.parse_mesh_heading(
-                element_mesh_heading=element_mesh_heading
-            )
+        for _element in element.getchildren():
+            mesh_heading = self.parse_mesh_heading(_element)
             mesh_headings.append(mesh_heading)
 
         return mesh_headings
 
-    def parse_keyword(self, element_keyword):
+    def parse_keyword(self, element):
 
-        if element_keyword is None:
+        if element is None:
             return {}
 
         keyword = {
-            "Keyword": self._et(element_keyword),
-            "UI": self._eav(element_keyword, "UI"),
-            "MajorTopicYN": self._eav(element_keyword, "MajorTopicYN"),
+            "Keyword": self._et(element),
+            "UI": self._eav(element, "UI"),
+            "MajorTopicYN": self._eav(element, "MajorTopicYN"),
         }
 
-        element_keyword["IsMajorTopic"] = convert_yn_boolean(
-            yn_boolean_raw=element_keyword["MajorTopicYN"]
+        keyword["IsMajorTopic"] = convert_yn_boolean(
+            keyword["MajorTopicYN"]
         )
 
         return keyword
 
-    def parse_keyword_list(self, element_keyword_list):
+    def parse_keyword_list(self, element):
 
         keywords = []
 
-        if element_keyword_list is None:
+        if element is None:
             return keywords
 
-        for element_keyword in element_keyword_list.getchildren():
-            keyword = self.parse_keyword(element_keyword=element_keyword)
+        for _element in element.getchildren():
+            keyword = self.parse_keyword(_element)
             keywords.append(keyword)
 
         return keywords
+
+    def parse_journal(self, element):
+
+        if element is None:
+            return {}
+
+        journal = {
+            "ISSN": {
+                "ISSN": self._et(element.find("ISSN")),
+                "IssnType": self._eav(
+                    element=self._et(element.find("ISSN")),
+                    attribute="IssnType"
+                )
+            },
+            "JournalIssue": {
+                "Volume": self._et(element.find("Volume")),
+                "Issue": self._et(element.find("Issue")),
+                "PubDate": parse_date_element(element.find("PubDate")),
+            },
+            "Title": self._et(element.find("Title")),
+            "ISOAbbreviation": self._et(element.find("ISOAbbreviation")),
+        }
+
+        return journal
+
+    def parse_affiliation_info(self, element):
+
+        if element is None:
+            return {}
+
+        affiliation_info = {
+            "Identifier": {
+                "Source": self._eav(element.find("Identifier"), "Source"),
+                "Identifier": self._et(element.find("Identifier"))
+            },
+            "Affiliations": [{
+                "Affiliation": self._et(_element)
+                for _element in element.getchildren()
+            }]
+        }
+
+        return affiliation_info
+
+    def parse_author(self, element):
+
+        if element is None:
+            return {}
+
+        author = {
+            "ValidYN": self._eav(element, "ValidYN"),
+            "LastName": self._et(element.find("LastName")),
+            "ForeName": self._et(element.find("ForeName")),
+            "Initials": self._et(element.find("Initials")),
+            "Identifier": {
+                "Source": self._eav(element.find("Identifier"), "Source"),
+                "Identifier": self._et(element.find("Identifier"))
+            },
+            "AffiliationInfo": self.parse_affiliation_info(
+                element.find("AffiliationInfo")
+            )
+        }
+
+        author["IsValid"] = convert_yn_boolean(author["ValidYN"])
+
+        if author["Identifier"]["Source"] == "ORCID":
+            author["Identifier"]["Identifier"] = clean_orcid_identifier(
+                author["Identifier"]["Identifier"]
+            )
+
+    def parse_author_list(self, element: etree.Element) -> dict:
+
+        if element is None:
+            return {}
+
+        author_list = {
+            "CompleteYN": self._eav(element, "CompleteYN"),
+            "Authors": [{
+                "Author": self.parse_author(_element)
+                for _element in element.findall("Author")
+            }]
+        }
+
+        return author_list
+
+    def parse_abstract(self, element):
+
+        abstract = []
+
+        if element is None:
+            return abstract
+
+        for element_abstract_text in element.getchildren():
+            abstract_text = {
+                "AbstractText": self._et(
+                    element_abstract_text.find("AbstractText")
+                ),
+                "Label": self._eav(
+                    element_abstract_text.find("AbstractText"),
+                    "Label"
+                ),
+                "NlmCategory": self._eav(
+                    element_abstract_text.find("AbstractText"), "NlmCategory"
+                ),
+            }
+            abstract.append(abstract_text)
+
+        return abstract
+
+    def parse_pagination(self, element: etree.Element) -> dict:
+
+        if element is None:
+            return {}
+
+        pagination = {
+            "MedlinePgn": self._et(element.find("MedlinePgn"))
+        }
+
+        return pagination
+
+    def parse_publication_type(self, element):
+
+        if element is None:
+            return {}
+
+        publication_type = {
+            "PublicationType": self._et(element),
+            "UI": self._eav(element, "UI"),
+        }
+
+        return publication_type
+
+    def parse_publication_type_list(self, element):
+
+        publication_type_list = []
+
+        if element is None:
+            return publication_type_list
+
+        for _element in element.getchildren():
+            publication_type = self.parse_publication_type_list(_element)
+            publication_type_list.append(publication_type)
+
+        return publication_type_list
+
+    def parse_article(self, element):
+
+        article = {
+            "Journal": self.parse_journal(element.find("Journal")),
+            "ArticleTitle": self._et(element.find("ArticleTitle")),
+            "Pagination": self.parse_pagination(element.find("Pagination")),
+            "Abstract": self.parse_abstract(element.find("Abstract")),
+            "AuthorList": self.parse_author_list(element.find("AuthorList")),
+            "Language": self._et(element.find("Language")),
+            # TODO
+            "DataBankList": None,
+            "PublicationTypeList": self.parse_publication_type_list(
+                element.find("PublicationTypeList")
+            ),
+            "ArticleDate": parse_date_element(element.find("ArticleDate"))
+        }
+
+        return article
 
     def parse_medline_citation(self, element):
 
@@ -249,46 +400,45 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             "DateRevised": parse_date_element(
                 date_element=element.find("DateRevised")
             ),
-            # TODO
-            "Article": None,
+            "Article": self.parse_article(element.find("Article")),
             "MedlineJournalInfo": self.parse_medline_journal_info(
-                element_medline_journal_info=element.find("MedlineJournalInfo")
+                element.find("MedlineJournalInfo")
             ),
             "ChemicalList": self.parse_chemical_list(
-                element_chemical_list=element.find("ChemicalList")
+                element.find("ChemicalList")
             ),
             # The `<CitationSubset>` element is skipped.
             "MeshHeadingList": self.parse_mesh_heading_list(
-                element_mesh_heading_list=element.find("MeshHeadingList")
+                element.find("MeshHeadingList")
             ),
             "KeywordList": self.parse_keyword_list(
-                element_keyword_list=element.find("KeywordList")
+                element.find("KeywordList")
             )
         }
 
         return medline_citation
 
-    def parse_article_id(self, element_article_id):
+    def parse_article_id(self, element):
 
-        if element_article_id is None:
+        if element is None:
             return {}
 
-        keyword = {
-            "ArticleId": self._et(element_article_id),
-            "IdType": self._eav(element_article_id, "IdType"),
+        article_id = {
+            "ArticleId": self._et(element),
+            "IdType": self._eav(element, "IdType"),
         }
 
-        return keyword
+        return article_id
 
-    def parse_article_id_list(self, element_article_id_list):
+    def parse_article_id_list(self, element):
 
         article_ids = []
 
-        if element_article_id_list is None:
+        if element is None:
             return article_ids
 
-        for element_article_id in element_article_id_list.getchildren():
-            article_id = self.parse_keyword(element_keyword=element_article_id)
+        for _element in element.getchildren():
+            article_id = self.parse_article_id(_element)
             article_ids.append(article_id)
 
         return article_ids
@@ -299,7 +449,7 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             # The `<History>` element is skipped.
             # The `<PublicationStatus>` element is skipped.
             "ArticleIdList": self.parse_article_id_list(
-                element_article_id_list=element.find("ArticleIdList")
+                element.find("ArticleIdList")
             )
         }
 

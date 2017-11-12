@@ -4,8 +4,6 @@ import abc
 import gzip
 from lxml import etree
 
-import vivodict
-
 from .loggers import create_logger
 from .parser_utils import parse_date_element
 from .parser_utils import convert_yn_boolean
@@ -320,13 +318,13 @@ class ParserXmlPubmedArticle(ParserXmlBase):
         )
 
         for element_pubmed_article in elements_pubmed_articles:
-            pubmed_article = vivodict.VivoDict.vivify({
+            pubmed_article = {
                 "citation": self.parse_medline_citation(
                     element_pubmed_article.find("MedlineCitation")
                 ),
                 "pubmed": self.parse_pubmed_data(
                     element_pubmed_article.find("PubmedData")
                 )
-            })
+            }
 
             yield pubmed_article

@@ -73,9 +73,9 @@ def parse_date_element(date_element):
 
     if result["Year"] and result["Month"] and result["Day"]:
         result["Date"] = datetime.date(
-            year=int(result["year"]),
-            month=int(result["month"]),
-            day=int(result["day"])
+            year=int(result["Year"]),
+            month=int(result["Month"]),
+            day=int(result["Day"])
         )
 
     return result

@@ -77,7 +77,7 @@ class ParserXmlBase(object):
 class ParserXmlPubmedArticle(ParserXmlBase):
     def __init__(self, **kwargs):
 
-        super(ParserXmlPubmedArticle).__init__(kwargs=kwargs)
+        super(ParserXmlPubmedArticle, self).__init__(kwargs=kwargs)
 
     def parse_medline_journal_info(self, element):
 
@@ -110,23 +110,21 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
     def parse_chemical_list(self, element):
 
-        chemicals = []
-
         if element is None:
-            return chemicals
+            return {}
 
-        for _element in element.getchildren():
-            chemical = self.parse_chemical(_element)
-            chemicals.append(chemical)
+        chemical_list = {
+            "Chemicals": [{
+                "Chemical": self.parse_chemical(_element)
+            } for _element in element.findall("Chemical")]
+        }
 
-        return chemicals
+        return chemical_list
 
     def parse_mesh_entry(self, element, entry_name):
 
-        mesh_entry = {}
-
         if element is None:
-            return mesh_entry
+            return {}
 
         mesh_entry = {
             entry_name: self._et(element),
@@ -142,19 +140,13 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
     def parse_mesh_descriptor(self, element):
 
-        mesh_descriptor = self.parse_mesh_entry(
-            element=element,
-            entry_name="DescriptorName"
-        )
+        mesh_descriptor = self.parse_mesh_entry(element, "DescriptorName")
 
         return mesh_descriptor
 
     def parse_mesh_qualifier(self, element):
 
-        mesh_descriptor = self.parse_mesh_entry(
-            element=element,
-            entry_name="QualifierName"
-        )
+        mesh_descriptor = self.parse_mesh_entry(element, "QualifierName")
 
         return mesh_descriptor
 
@@ -167,28 +159,25 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             "DescriptorName": self.parse_mesh_descriptor(
                 element.find("DescriptorName")
             ),
-            "Qualifiers": [{
-                "Qualifier": self.parse_mesh_qualifier(
-                    _element for _element in
-                    element.findall("Qualifier")
-                )
-            }]
+            "QualifierNames": [{
+                "QualifierName": self.parse_mesh_qualifier(_element)
+            } for _element in element.findall("QualifierName")]
         }
 
         return mesh_heading
 
     def parse_mesh_heading_list(self, element):
 
-        mesh_headings = []
-
         if element is None:
-            return mesh_headings
+            return {}
 
-        for _element in element.getchildren():
-            mesh_heading = self.parse_mesh_heading(_element)
-            mesh_headings.append(mesh_heading)
+        mesh_heading_list = {
+            "MeshHeadings": [{
+                "MeshHeading": self.parse_mesh_heading(_element)
+            } for _element in element.findall("MeshHeading")]
+        }
 
-        return mesh_headings
+        return mesh_heading_list
 
     def parse_keyword(self, element):
 
@@ -197,7 +186,6 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         keyword = {
             "Keyword": self._et(element),
-            "UI": self._eav(element, "UI"),
             "MajorTopicYN": self._eav(element, "MajorTopicYN"),
         }
 
@@ -209,16 +197,32 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
     def parse_keyword_list(self, element):
 
-        keywords = []
+        if element is None:
+            return {}
+
+        keyword_list = {
+            "Keywords": [{
+                "Keyword": self.parse_keyword(_element)
+            } for _element in element.findall("Keyword")]
+        }
+
+        return keyword_list
+
+    def parse_journal_issue(self, element):
 
         if element is None:
-            return keywords
+            return {}
 
-        for _element in element.getchildren():
-            keyword = self.parse_keyword(_element)
-            keywords.append(keyword)
+        journal_issue = {
+            "CitedMedium": self._eav(element, "CitedMedium"),
+            "JournalIssue": {
+                "Volume": self._et(element.find("Volume")),
+                "Issue": self._et(element.find("Issue")),
+                "PubDate": parse_date_element(element.find("PubDate")),
+            }
+        }
 
-        return keywords
+        return journal_issue
 
     def parse_journal(self, element):
 
@@ -228,16 +232,11 @@ class ParserXmlPubmedArticle(ParserXmlBase):
         journal = {
             "ISSN": {
                 "ISSN": self._et(element.find("ISSN")),
-                "IssnType": self._eav(
-                    element=self._et(element.find("ISSN")),
-                    attribute="IssnType"
-                )
+                "IssnType": self._eav(element.find("ISSN"), "IssnType"),
             },
-            "JournalIssue": {
-                "Volume": self._et(element.find("Volume")),
-                "Issue": self._et(element.find("Issue")),
-                "PubDate": parse_date_element(element.find("PubDate")),
-            },
+            "JournalIssue": self.parse_journal_issue(
+                element.find("JournalIssue")
+            ),
             "Title": self._et(element.find("Title")),
             "ISOAbbreviation": self._et(element.find("ISOAbbreviation")),
         }
@@ -256,8 +255,7 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             },
             "Affiliations": [{
                 "Affiliation": self._et(_element)
-                for _element in element.getchildren()
-            }]
+            } for _element in element.findall("Affiliation")]
         }
 
         return affiliation_info
@@ -269,24 +267,29 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         author = {
             "ValidYN": self._eav(element, "ValidYN"),
-            "LastName": self._et(element.find("LastName")),
-            "ForeName": self._et(element.find("ForeName")),
-            "Initials": self._et(element.find("Initials")),
-            "Identifier": {
-                "Source": self._eav(element.find("Identifier"), "Source"),
-                "Identifier": self._et(element.find("Identifier"))
-            },
-            "AffiliationInfo": self.parse_affiliation_info(
-                element.find("AffiliationInfo")
-            )
+            "Author": {
+                "LastName": self._et(element.find("LastName")),
+                "ForeName": self._et(element.find("ForeName")),
+                "Initials": self._et(element.find("Initials")),
+                "Identifier": {
+                    "Source": self._eav(element.find("Identifier"), "Source"),
+                    "Identifier": self._et(element.find("Identifier"))
+                },
+                "AffiliationInfo": self.parse_affiliation_info(
+                    element.find("AffiliationInfo")
+                )
+            }
         }
 
         author["IsValid"] = convert_yn_boolean(author["ValidYN"])
 
-        if author["Identifier"]["Source"] == "ORCID":
-            author["Identifier"]["Identifier"] = clean_orcid_identifier(
-                author["Identifier"]["Identifier"]
+        author_identifier = author["Author"]["Identifier"]
+        if author_identifier["Source"] == "ORCID":
+            author_identifier["Identifier"] = clean_orcid_identifier(
+                author_identifier["Identifier"]
             )
+
+        return author
 
     def parse_author_list(self, element: etree.Element) -> dict:
 
@@ -297,33 +300,38 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             "CompleteYN": self._eav(element, "CompleteYN"),
             "Authors": [{
                 "Author": self.parse_author(_element)
-                for _element in element.findall("Author")
-            }]
+            } for _element in element.findall("Author")]
         }
+
+        author_list["CompleteYN"] = convert_yn_boolean(
+            author_list["CompleteYN"]
+        )
 
         return author_list
 
-    def parse_abstract(self, element):
-
-        abstract = []
+    def parse_abstract_text(self, element):
 
         if element is None:
-            return abstract
+            return {}
 
-        for element_abstract_text in element.getchildren():
-            abstract_text = {
-                "AbstractText": self._et(
-                    element_abstract_text.find("AbstractText")
-                ),
-                "Label": self._eav(
-                    element_abstract_text.find("AbstractText"),
-                    "Label"
-                ),
-                "NlmCategory": self._eav(
-                    element_abstract_text.find("AbstractText"), "NlmCategory"
-                ),
-            }
-            abstract.append(abstract_text)
+        abstract_text = {
+            "AbstractText": self._et(element),
+            "Label": self._eav(element, "Label"),
+            "NlmCategory": self._eav(element, "NlmCategory"),
+        }
+
+        return abstract_text
+
+    def parse_abstract(self, element):
+
+        if element is None:
+            return {}
+
+        abstract = {
+            "AbstractTexts": [{
+                "AbstractText": self.parse_abstract_text(_element)
+            } for _element in element.findall("AbstractText")]
+        }
 
         return abstract
 
@@ -352,32 +360,96 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
     def parse_publication_type_list(self, element):
 
-        publication_type_list = []
-
         if element is None:
-            return publication_type_list
+            return {}
 
-        for _element in element.getchildren():
-            publication_type = self.parse_publication_type_list(_element)
-            publication_type_list.append(publication_type)
+        publication_type_list = {
+            "PublicationTypes": [{
+                "PublicationType": self.parse_publication_type(_element)
+            } for _element in element.findall("PublicationType")]
+        }
 
         return publication_type_list
 
+    def parse_accession_number(self, element):
+
+        if element is None:
+            return {}
+
+        accession_number = {
+            "AccessionNumber": self._et(element),
+        }
+
+        return accession_number
+
+    def parse_accession_number_list(self, element):
+
+        if element is None:
+            return {}
+
+        accession_number_list = {
+            "AccessionNumbers": [{
+                "AccessionNumber": self.parse_accession_number(_element)
+            } for _element in element.findall("AccessionNumber")]
+        }
+
+        return accession_number_list
+
+    def parse_databank(self, element):
+
+        if element is None:
+            return {}
+
+        databank = {
+            "DataBankName": self._et(element.find("DataBankName")),
+            "AccessionNumberList": self.parse_accession_number_list(
+                element.find("AccessionNumberList")
+            ),
+        }
+
+        return databank
+
+    def parse_databank_list(self, element):
+
+        if element is None:
+            return {}
+
+        databank_list = {
+            "CompleteYN": self._eav(element, "CompleteYN"),
+            "DataBanks": [{
+                "DataBank": self.parse_databank(_element)
+            } for _element in element.findall("DataBank")]
+        }
+
+        databank_list["IsComplete"] = convert_yn_boolean(
+            databank_list["CompleteYN"]
+        )
+
+        return databank_list
+
     def parse_article(self, element):
 
+        if element is None:
+            return {}
+
         article = {
-            "Journal": self.parse_journal(element.find("Journal")),
-            "ArticleTitle": self._et(element.find("ArticleTitle")),
-            "Pagination": self.parse_pagination(element.find("Pagination")),
-            "Abstract": self.parse_abstract(element.find("Abstract")),
-            "AuthorList": self.parse_author_list(element.find("AuthorList")),
-            "Language": self._et(element.find("Language")),
-            # TODO
-            "DataBankList": None,
-            "PublicationTypeList": self.parse_publication_type_list(
-                element.find("PublicationTypeList")
-            ),
-            "ArticleDate": parse_date_element(element.find("ArticleDate"))
+            "PubModel": self._eav(element, "PubModel"),
+            "Article": {
+                "Journal": self.parse_journal(element.find("Journal")),
+                "ArticleTitle": self._et(element.find("ArticleTitle")),
+                "Pagination": self.parse_pagination(element.find("Pagination")),
+                "Abstract": self.parse_abstract(element.find("Abstract")),
+                "AuthorList": self.parse_author_list(
+                    element.find("AuthorList")),
+                "Language": self._et(element.find("Language")),
+                "DataBankList": self.parse_databank_list(
+                    element.find("DataBankList")
+                ),
+                "PublicationTypeList": self.parse_publication_type_list(
+                    element.find("PublicationTypeList")
+                ),
+                "ArticleDate": parse_date_element(element.find("ArticleDate"))
+            }
         }
 
         return article
@@ -432,18 +504,21 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
     def parse_article_id_list(self, element):
 
-        article_ids = []
-
         if element is None:
-            return article_ids
+            return {}
 
-        for _element in element.getchildren():
-            article_id = self.parse_article_id(_element)
-            article_ids.append(article_id)
+        article_id_list = {
+            "ArticleIds": [{
+                "ArticleId": self.parse_article_id(_element)
+            } for _element in element.findall("ArticleId")]
+        }
 
-        return article_ids
+        return article_id_list
 
     def parse_pubmed_data(self, element):
+
+        if element is None:
+            return {}
 
         pubmed_data = {
             # The `<History>` element is skipped.
@@ -455,6 +530,22 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         return pubmed_data
 
+    def parse_pubmed_article(self, element):
+
+        if element is None:
+            return {}
+
+        pubmed_article = {
+            "MedlineCitation": self.parse_medline_citation(
+                element.find("MedlineCitation")
+            ),
+            "PubmedData": self.parse_pubmed_data(
+                element.find("PubmedData")
+            )
+        }
+
+        return pubmed_article
+
     def parse(self, filename_xml):
 
         msg_fmt = "Parsing Pubmed XML file '{0}'".format(filename_xml)
@@ -462,19 +553,12 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         file_xml = self.open_xml_file(filename_xml=filename_xml)
 
-        elements_pubmed_articles = self.generate_xml_elements(
+        elements = self.generate_xml_elements(
             file_xml=file_xml,
             element_tag="PubmedArticle"
         )
 
-        for element_pubmed_article in elements_pubmed_articles:
-            pubmed_article = {
-                "citation": self.parse_medline_citation(
-                    element_pubmed_article.find("MedlineCitation")
-                ),
-                "pubmed": self.parse_pubmed_data(
-                    element_pubmed_article.find("PubmedData")
-                )
-            }
+        for element in elements:
+            pubmed_article = self.parse_pubmed_article(element)
 
             yield pubmed_article

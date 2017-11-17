@@ -755,7 +755,7 @@ class Chemical(Base, OrmBase):
     # Chemical registry number (referring to the `<RegistryNumber>` element).
     num_registry = sqlalchemy.Column(
         name="num_registry",
-        type_=sqlalchemy.types.Unicode(length=9),
+        type_=sqlalchemy.types.Unicode(),
         index=True,
     )
 

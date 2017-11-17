@@ -1,8 +1,8 @@
-"""empty message
+"""Created initial schema.
 
-Revision ID: ee5630a1ac6e
+Revision ID: 2b1bed7ba9eb
 Revises: 
-Create Date: 2017-11-17 10:36:46.875333
+Create Date: 2017-11-17 11:14:46.440693
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ee5630a1ac6e'
+revision = '2b1bed7ba9eb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -211,12 +211,12 @@ def upgrade():
     sa.Column('citation_id', sa.BigInteger(), nullable=True),
     sa.Column('descriptor_id', sa.Integer(), nullable=True),
     sa.Column('is_descriptor_major', sa.Boolean(), nullable=False),
-    sa.Column('qualifier_id', sa.Integer(), nullable=False),
+    sa.Column('qualifier_id', sa.Integer(), nullable=True),
     sa.Column('is_qualifier_major', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['citation_id'], ['citations.citation_id'], ),
     sa.ForeignKeyConstraint(['descriptor_id'], ['descriptors.descriptor_id'], ),
     sa.ForeignKeyConstraint(['qualifier_id'], ['qualifiers.qualifier_id'], ),
-    sa.PrimaryKeyConstraint('citation_descriptor_qualifier_id', 'qualifier_id')
+    sa.PrimaryKeyConstraint('citation_descriptor_qualifier_id')
     )
     op.create_table('citation_identifiers',
     sa.Column('citation_identifier_id', sa.BigInteger(), nullable=False),

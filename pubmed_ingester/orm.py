@@ -541,11 +541,10 @@ class CitationDescriptorQualifier(Base, OrmBase):
         nullable=False
     )
 
-    # Foreign key to the qualifier ID and part of the composite primary key.
+    # Foreign key to the qualifier ID.
     qualifier_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("qualifiers.qualifier_id"),
         name="qualifier_id",
-        primary_key=True,
     )
 
     # Whether the qualifier is major or not (referring to the `MajorTopicYN`

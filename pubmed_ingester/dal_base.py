@@ -2,8 +2,8 @@
 
 """ Boilerplate SQLAlchemy to SQL-server interaction module.
 
-This module contains the `BoilerplateSql` class which is meant to facilitate
-safe interaction between SQLAlchemy and SQL-servers.
+This module contains the `DalBase` class which is meant to facilitate safe
+interaction between SQLAlchemy and SQL-servers.
 """
 
 import contextlib

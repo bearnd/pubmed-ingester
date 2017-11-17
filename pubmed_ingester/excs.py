@@ -37,3 +37,9 @@ class RecordDoesNotExist(Exception):
     def __init__(self, message, *args):
         super(RecordDoesNotExist, self).__init__(message, *args)
 
+
+class InvalidArguments(Exception):
+    """Exception raised when the arguments to a function/method call are
+    invalid."""
+    def __init__(self, message, *args):
+        super(InvalidArguments, self).__init__(message, *args)

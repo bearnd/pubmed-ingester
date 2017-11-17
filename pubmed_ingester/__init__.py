@@ -9,7 +9,7 @@ from . import orm
 from . import orm_base
 from . import parser_utils
 from . import parsers
-from . import sql
+from . import dal_base
 from . import pubmed_ingester
 
 __author__ = """Adamos Kyriakou"""

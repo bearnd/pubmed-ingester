@@ -12,7 +12,7 @@ import sqlalchemy
 import sqlalchemy.orm
 
 
-class BoilerplateSql(object):
+class DalBase(object):
     """Basic Python boilerplate for interaction with an SQL database.
 
     Attributes:

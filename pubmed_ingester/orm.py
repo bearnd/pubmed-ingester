@@ -212,14 +212,20 @@ class Affiliation(Base, OrmBase):
         back_populates="affiliations",
     )
 
-    @sqlalchemy.orm.validates("affiliation")
-    def update_affiliation_md5(self, key, value):
+    @sqlalchemy.orm.validates("affiliation", "affiliation_identifier")
+    def update_md5(self, key, value):
 
-        # Encode the `affiliation` attribute to UTF8 (in case it contains
+        # Retrieve the full concatenated name.
+        affiliation_full = " ".join([
+            str(self.affiliation_identifier),
+            self.affiliation
+        ])
+
+        # Encode the full concatenated name to UTF8 (in case it contains
         # unicode characters).
-        affiliation_encoded = self.affiliation.encode("utf-8")
+        affiliation_encoded = affiliation_full.encode("utf-8")
 
-        # Calculate the MD5 hash of the encoded affiliation and store it
+        # Calculate the MD5 hash of the encoded full concatenated name and store
         # under the `md5` attribute.
         md5 = hashlib.md5(affiliation_encoded).digest()
         self.md5 = md5

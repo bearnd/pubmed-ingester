@@ -23,6 +23,18 @@ class AbstractTextCategory(enum.Enum):
     conclusions = "Conclusions"
     unassigned = "Unassigned"
 
+    @staticmethod
+    def get_enum(value):
+        if not value:
+            return None
+
+        members = [
+            (member, member.value) for member in AbstractTextCategory
+        ]
+        for member, member_value in members:
+            if member_value.lower() == value.lower():
+                return member
+
 
 class ArticleIdentifierType(enum.Enum):
     """Enumeration of the values of the `IdType` attribute under the
@@ -39,6 +51,18 @@ class ArticleIdentifierType(enum.Enum):
     medline = "medline"
     pmcid = "pmcid"
 
+    @staticmethod
+    def get_enum(value):
+        if not value:
+            return None
+
+        members = [
+            (member, member.value) for member in ArticleIdentifierType
+        ]
+        for member, member_value in members:
+            if member_value.lower() == value.lower():
+                return member
+
 
 class ArticlePubModel(enum.Enum):
     """Enumeration of the values of the `PubModel` attribute under the
@@ -50,6 +74,18 @@ class ArticlePubModel(enum.Enum):
     electronic_print = "Electronic-Print"
     electronic_ecollection = "Electronic-eCollection"
 
+    @staticmethod
+    def get_enum(value):
+        if not value:
+            return None
+
+        members = [
+            (member, member.value) for member in ArticlePubModel
+        ]
+        for member, member_value in members:
+            if member_value.lower() == value.lower():
+                return member
+
 
 class JournalIssnType(enum.Enum):
     """Enumeration of the values of the `IssnType` attribute under the
@@ -58,6 +94,18 @@ class JournalIssnType(enum.Enum):
     print = "Print"
     electronic = "Electronic"
     undetermined = "Undetermined"
+
+    @staticmethod
+    def get_enum(value):
+        if not value:
+            return None
+
+        members = [
+            (member, member.value) for member in JournalIssnType
+        ]
+        for member, member_value in members:
+            if member_value.lower() == value.lower():
+                return member
 
 
 class AbstractText(Base, OrmBase):

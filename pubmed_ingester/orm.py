@@ -1236,12 +1236,34 @@ class Keyword(Base, OrmBase):
         index=True,
     )
 
+    # MD5 hash of the keyword.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
     # Relationship to a list of `Citation` records.
     citations = sqlalchemy.orm.relationship(
         argument="Citation",
         secondary="citation_keywords",
         back_populates="keywords",
     )
+
+    @sqlalchemy.orm.validates("keyword")
+    def update_md5(self, key, value):
+
+        # Encode the keyword to UTF8 (in case it contains unicode characters).
+        keyword_encoded = self.keyword.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded keyword and store under the
+        # `md5` attribute.
+        md5 = hashlib.md5(keyword_encoded).digest()
+        self.md5 = md5
+
+        return value
 
 
 class PublicationType(Base, OrmBase):

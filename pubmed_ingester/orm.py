@@ -969,14 +969,37 @@ class Databank(Base, OrmBase):
         autoincrement="auto",
     )
 
-    # Unique qualifier name (referring to the `<DataBankName>` element).
-    name = sqlalchemy.Column(
-        name="name",
+    # Databank name (referring to the `<DataBankName>` element).
+    databank = sqlalchemy.Column(
+        name="databank",
         type_=sqlalchemy.types.Unicode(length=20),
         unique=True,
         nullable=False,
         index=True,
     )
+
+    # MD5 hash of the databank name.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    @sqlalchemy.orm.validates("databank")
+    def update_md5(self, key, value):
+
+        # Encode the databank name to UTF8 (in case it contains unicode
+        # characters).
+        databank_name_encoded = self.databank.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded databank name and store under
+        # the `md5` attribute.
+        md5 = hashlib.md5(databank_name_encoded).digest()
+        self.md5 = md5
+
+        return value
 
 
 class Descriptor(Base, OrmBase):

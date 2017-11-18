@@ -63,8 +63,8 @@ def parse_date_element(date_element):
             result["Month"] = month_element_text
         # If the string contains a recognized month abbreviation get the digit
         # from the `month_abbreviations` dictionary.
-        elif month_element_text in month_abbreviations:
-            result["Month"] = month_abbreviations[month_element_text]
+        elif month_element_text.lower() in month_abbreviations:
+            result["Month"] = month_abbreviations[month_element_text.lower()]
 
     if day_element is not None:
         # Extract the text out of the element.

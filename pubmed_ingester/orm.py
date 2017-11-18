@@ -168,6 +168,21 @@ class Affiliation(Base, OrmBase):
         autoincrement="auto",
     )
 
+    # Affiliation identifier (referring to the `<Identifier>` element).
+    affiliation_identifier = sqlalchemy.Column(
+        name="affiliation_identifier",
+        type_=sqlalchemy.types.Unicode(),
+        nullable=True,
+    )
+
+    # Affiliation identifier source (referring to the `Source` attribute of the
+    # <Identifier>` element).
+    affiliation_identifier_source = sqlalchemy.Column(
+        name="affiliation_identifier_source",
+        type_=sqlalchemy.types.Unicode(),
+        nullable=True,
+    )
+
     # Affiliation name (referring to the `<Affliliation>` element).
     affiliation = sqlalchemy.Column(
         name="affiliation",

@@ -24,6 +24,7 @@ month_abbreviations = {
 }
 
 regex_orcid = re.compile("(\d{4}-?\d{4}-?\d{4}-?\d{4})")
+regex_year = re.compile("(\d{4})")
 
 
 def parse_date_element(date_element):
@@ -83,6 +84,31 @@ def parse_date_element(date_element):
         )
 
     return result
+
+
+def extract_year_from_medlinedate(pubdate_element):
+
+    if pubdate_element is None:
+        return None
+
+    medlinedate_element = pubdate_element.find("MedlineDate")
+
+    if medlinedate_element is None:
+        return None
+
+    medline_date_text = medlinedate_element.text
+
+    match = regex_year.search(medline_date_text)
+
+    if match is None:
+        return None
+
+    year_max = -1
+    for group in match.groups():
+        if year_max < int(group):
+            year_max = int(group)
+
+    return year_max
 
 
 def convert_yn_boolean(yn_boolean_raw):

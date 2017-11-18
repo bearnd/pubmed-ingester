@@ -706,6 +706,21 @@ class Author(Base, OrmBase):
         autoincrement="auto",
     )
 
+    # Author identifier (referring to the `<Identifier>` element).
+    author_identifier = sqlalchemy.Column(
+        name="author_identifier",
+        type_=sqlalchemy.types.Unicode(),
+        nullable=True,
+    )
+
+    # Author identifier source (referring to the `Source` attribute of the
+    # <Identifier>` element).
+    author_identifier_source = sqlalchemy.Column(
+        name="author_identifier_source",
+        type_=sqlalchemy.types.Unicode(),
+        nullable=True,
+    )
+
     # Author first name (referring to the `<ForeName>` element).
     name_first = sqlalchemy.Column(
         name="name_first",

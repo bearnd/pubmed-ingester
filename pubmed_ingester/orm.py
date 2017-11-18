@@ -248,37 +248,37 @@ class Article(Base, OrmBase):
     )
 
     # Publication year (referring to the `<Year>` element).
-    pub_year = sqlalchemy.Column(
-        name="pub_year",
+    publication_year = sqlalchemy.Column(
+        name="publication_year",
         type_=sqlalchemy.types.SmallInteger(),
         nullable=False,
         index=True,
     )
 
     # Publication month (referring to the `<Month>` element).
-    pub_month = sqlalchemy.Column(
-        name="pub_month",
+    publication_month = sqlalchemy.Column(
+        name="publication_month",
         type_=sqlalchemy.types.SmallInteger(),
         nullable=True,
     )
 
     # Publication day (referring to the `<Day>` element).
-    pub_day = sqlalchemy.Column(
-        name="pub_day",
+    publication_day = sqlalchemy.Column(
+        name="publication_day",
         type_=sqlalchemy.types.SmallInteger(),
         nullable=True,
     )
 
     # Publication date (referring to either the `<ArticleDate>` element).
-    dt_published = sqlalchemy.Column(
-        name="dt_published",
+    date_published = sqlalchemy.Column(
+        name="date_published",
         type_=sqlalchemy.types.Date(),
         nullable=True,
     )
 
     # Article publication model (referring to the `PubModel` attribute of the
     # `<Article>` element).
-    pub_model = sqlalchemy.Column(
+    publication_model = sqlalchemy.Column(
         name="pub_model",
         type_=sqlalchemy.types.Enum(ArticlePubModel),
         nullable=True,
@@ -634,6 +634,7 @@ class CitationIdentifier(Base, OrmBase):
     identifier = sqlalchemy.Column(
         name="identifier",
         type_=sqlalchemy.types.Unicode(),
+        nullable=False,
     )
 
 

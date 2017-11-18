@@ -1132,6 +1132,41 @@ class Journal(Base, OrmBase):
         nullable=True,
     )
 
+    # MD5 hash of the journal `title` and `abbreviation` fields.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    # Relationship to a list of `Article` records.
+    articles = sqlalchemy.orm.relationship(
+        argument="Article",
+        back_populates="journal"
+    )
+
+    @sqlalchemy.orm.validates("title", "abbreviation")
+    def update_md5(self, key, value):
+
+        # Retrieve the full concatenated name.
+        journal_title_full = " ".join([
+            str(self.title),
+            str(self.abbreviation)
+        ])
+
+        # Encode the full concatenated name to UTF8 (in case it contains
+        # unicode characters).
+        journal_title_encoded = journal_title_full.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded full concatenated name and store
+        # under the `md5` attribute.
+        md5 = hashlib.md5(journal_title_encoded).digest()
+        self.md5 = md5
+
+        return value
+
 
 class JournalInfo(Base, OrmBase):
     """Table of `<MedlineJournalInfo>` element records."""

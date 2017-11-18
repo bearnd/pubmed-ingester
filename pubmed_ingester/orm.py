@@ -1290,10 +1290,11 @@ class PublicationType(Base, OrmBase):
         index=True,
     )
 
-    # Publication type name (referring to the `<PublicationType>` element).
-    name = sqlalchemy.Column(
-        name="name",
-        type_=sqlalchemy.types.Unicode(length=9),
+    # Publication type (referring to the `<PublicationType>` element).
+    publication_type = sqlalchemy.Column(
+        name="publication_type",
+        type_=sqlalchemy.types.Unicode(),
+        nullable=False,
     )
 
     # Relationship to a list of `Article` records.

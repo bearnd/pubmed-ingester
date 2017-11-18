@@ -77,11 +77,16 @@ def parse_date_element(date_element):
             result["Day"] = day_element_text
 
     if result["Year"] and result["Month"] and result["Day"]:
-        result["Date"] = datetime.date(
-            year=int(result["Year"]),
-            month=int(result["Month"]),
-            day=int(result["Day"])
-        )
+        try:
+            result["Date"] = datetime.date(
+                year=int(result["Year"]),
+                month=int(result["Month"]),
+                day=int(result["Day"])
+            )
+        except ValueError:
+            msg = "Date components {} cannot be combined into a date"
+            msg_fmt = msg.format(result)
+            logger.error(msg_fmt)
 
     return result
 

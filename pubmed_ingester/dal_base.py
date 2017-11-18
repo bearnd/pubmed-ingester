@@ -6,8 +6,10 @@ This module contains the `DalBase` class which is meant to facilitate safe
 interaction between SQLAlchemy and SQL-servers.
 """
 
+import inspect
 import contextlib
 
+import decorator
 import sqlalchemy
 import sqlalchemy.orm
 
@@ -155,3 +157,34 @@ class DalBase(object):
                 session.expunge_all()
 
             session.close()
+
+
+def with_session_scope(**dec_kwargs):
+    """Decorator factory, takes arguments accepted by the `session_scope` method
+    of the `self` object of its wrapped function.
+
+    This allows methods to declare that they want a session context, support a
+    default way to make one, but still allow the caller to pass a preexisting
+    session and control transaction scope.
+
+    Note:
+        Wrapped function must accept a defaultable `session` parameter, as well
+        as a `self` parameter supporting the `sesson_scope` method.
+
+        If call to wrapped function doesn't pass a session, will create a new
+        session according to the args passed to the decorator factory.
+        Otherwise, will leave session alone and become a noop.
+    """
+
+    @decorator.decorator
+    def wrapper(target, *args, **kwargs):
+        kwargs = inspect.getcallargs(target, *args, **kwargs)
+
+        if "session" in kwargs and kwargs["session"]:
+            return target(**kwargs)
+        else:
+            with kwargs["self"].session_scope(**dec_kwargs) as session:
+                kwargs["session"] = session
+                return target(**kwargs)
+
+    return wrapper

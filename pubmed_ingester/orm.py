@@ -130,6 +130,7 @@ class AccessionNumber(Base, OrmBase):
         index=True,
     )
 
+    # MD5 hash of the accession_number.
 
 class Affiliation(Base, OrmBase):
     """Table of `<Affliliation>` element records."""

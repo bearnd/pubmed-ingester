@@ -3,6 +3,10 @@
 import re
 import datetime
 
+from pubmed_ingester.loggers import create_logger
+
+
+logger = create_logger(logger_name=__name__)
 
 month_abbreviations = {
     "jan": "01",

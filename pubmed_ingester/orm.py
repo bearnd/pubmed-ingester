@@ -777,20 +777,24 @@ class Author(Base, OrmBase):
             str(self.name_first),
             str(self.name_initials),
             str(self.name_last),
-            str(self.name_suffix)
+            str(self.name_suffix),
         ])
         return name
 
     @sqlalchemy.orm.validates(
+        "author_identifier",
         "name_first",
         "name_initials",
         "name_last",
         "name_suffix",
     )
-    def update_author_md5(self, key, value):
+    def update_md5(self, key, value):
 
         # Retrieve the full concatenated name.
-        name = self.name_full()
+        name = " ".join([
+            str(self.author_identifier),
+            self.name_full()
+        ])
 
         # Encode the full concatenated name to UTF8 (in case it contains
         # unicode characters).

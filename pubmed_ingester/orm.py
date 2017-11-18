@@ -149,6 +149,7 @@ class Affiliation(Base, OrmBase):
     affiliation = sqlalchemy.Column(
         name="affiliation",
         type_=sqlalchemy.types.Unicode(),
+        nullable=False
     )
 
     # MD5 hash of the `affiliation` field.
@@ -664,24 +665,28 @@ class Author(Base, OrmBase):
     name_first = sqlalchemy.Column(
         name="name_first",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # Author last name (referring to the `<LastName>` element).
     name_last = sqlalchemy.Column(
         name="name_last",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # Author initials (referring to the `<Initials>` element).
     name_initials = sqlalchemy.Column(
         name="name_initials",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # Author suffix (referring to the `<Suffix>` element).
     name_suffix = sqlalchemy.Column(
         name="name_suffix",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # MD5 hash of the author's full name.
@@ -689,7 +694,8 @@ class Author(Base, OrmBase):
         name="md5",
         type_=sqlalchemy.types.Binary(),
         unique=True,
-        index=True
+        index=True,
+        nullable=False
     )
 
     # Relationship to a list of `Article` records.
@@ -757,6 +763,7 @@ class Chemical(Base, OrmBase):
         name="num_registry",
         type_=sqlalchemy.types.Unicode(),
         index=True,
+        nullable=True
     )
 
     # Publication type UID (referring to the `UI` attribute of the
@@ -766,12 +773,14 @@ class Chemical(Base, OrmBase):
         type_=sqlalchemy.types.Unicode(length=7),
         unique=True,
         index=True,
+        nullable=False,
     )
 
     # Chemical name (referring to the `<NameOfSubstance>` element).
     chemical = sqlalchemy.Column(
         name="chemical",
         type_=sqlalchemy.types.Unicode(),
+        nullable=False
     )
 
     # Relationship to a list of `Citation` records.
@@ -927,6 +936,7 @@ class Descriptor(Base, OrmBase):
         type_=sqlalchemy.types.Unicode(length=7),
         unique=True,
         index=True,
+        nullable=False,
     )
 
     # Descriptor qualifier name (value of the `<DescriptorName>` element).
@@ -958,24 +968,28 @@ class Grant(Base, OrmBase):
         name="uid",
         type_=sqlalchemy.types.Unicode(),
         unique=True,
+        nullable=False
     )
 
     # Grant acronym (referring to the `<Acronym>` element).
     acronym = sqlalchemy.Column(
         name="acronym",
         type_=sqlalchemy.types.Unicode(length=2),
+        nullable=True,
     )
 
     # Grant acronym (referring to the `<Agency>` element).
     agency = sqlalchemy.Column(
         name="agency",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # Country of granting agency (referring to the `<Country>` element).
     country = sqlalchemy.Column(
         name="country",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # Relationship to a list of `Article` records.
@@ -1005,8 +1019,7 @@ class Journal(Base, OrmBase):
     issn = sqlalchemy.Column(
         name="issn",
         type_=sqlalchemy.types.Unicode(length=9),
-        unique=True,
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
@@ -1022,12 +1035,14 @@ class Journal(Base, OrmBase):
     title = sqlalchemy.Column(
         name="title",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
     # Journal ISO abbreviation (referring to the `<ISOAbbreviation>` element).
     abbreviation = sqlalchemy.Column(
         name="abbreviation",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True,
     )
 
 
@@ -1050,25 +1065,29 @@ class JournalInfo(Base, OrmBase):
         name="nlmid",
         type_=sqlalchemy.types.Unicode(length=9),
         unique=True,
-        index=True
+        index=True,
+        nullable=False,
     )
 
     # Link to a journal ISSN (referring to the `<ISSNLinking>` element).
     issn = sqlalchemy.Column(
         name="issn",
         type_=sqlalchemy.types.Unicode(length=9),
+        nullable=True
     )
 
     # Country of journal publication (referring to the `<Country>` element).
     country = sqlalchemy.Column(
         name="country",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True
     )
 
     # Journal abbreviation (referring to the `<MedlineTA>` element).
     abbreviation = sqlalchemy.Column(
         name="abbreviation",
         type_=sqlalchemy.types.Unicode(),
+        nullable=True
     )
 
 
@@ -1123,6 +1142,7 @@ class PublicationType(Base, OrmBase):
         name="uid",
         type_=sqlalchemy.types.Unicode(length=7),
         unique=True,
+        nullable=False,
         index=True,
     )
 
@@ -1160,6 +1180,7 @@ class Qualifier(Base, OrmBase):
         name="uid",
         type_=sqlalchemy.types.Unicode(length=7),
         unique=True,
+        nullable=False,
         index=True,
     )
 

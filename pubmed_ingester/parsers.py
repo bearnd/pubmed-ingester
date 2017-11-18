@@ -271,6 +271,7 @@ class ParserXmlPubmedArticle(ParserXmlBase):
                 "LastName": self._et(element.find("LastName")),
                 "ForeName": self._et(element.find("ForeName")),
                 "Initials": self._et(element.find("Initials")),
+                "Suffix": self._et(element.find("Suffix")),
                 "Identifier": {
                     "Source": self._eav(element.find("Identifier"), "Source"),
                     "Identifier": self._et(element.find("Identifier"))

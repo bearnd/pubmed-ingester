@@ -131,6 +131,28 @@ class AccessionNumber(Base, OrmBase):
     )
 
     # MD5 hash of the accession_number.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    @sqlalchemy.orm.validates("accession_number")
+    def update_md5(self, key, value):
+
+        # Encode the accession number to UTF8 (in case it contains unicode
+        # characters).
+        accession_number_encoded = self.accession_number.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded accession number  and store
+        # under the `md5` attribute.
+        md5 = hashlib.md5(accession_number_encoded).digest()
+        self.md5 = md5
+
+        return value
+
 
 class Affiliation(Base, OrmBase):
     """Table of `<Affliliation>` element records."""

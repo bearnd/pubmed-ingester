@@ -4,6 +4,7 @@
 
 from . import config
 from . import excs
+from . import ingesters
 from . import loggers
 from . import orm
 from . import orm_base

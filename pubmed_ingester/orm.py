@@ -1201,6 +1201,15 @@ class Grant(Base, OrmBase):
         nullable=True,
     )
 
+    # MD5 hash of the grant's full description.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True,
+        nullable=False
+    )
+
     # Relationship to a list of `Article` records.
     articles = sqlalchemy.orm.relationship(
         argument="Article",
@@ -1211,6 +1220,36 @@ class Grant(Base, OrmBase):
     __table_args__ = (
         sqlalchemy.CheckConstraint("uid <> ''", "uid_not_empty"),
     )
+
+    @sqlalchemy.orm.validates(
+        "uid",
+        "acronym",
+        "agency",
+        "country",
+    )
+    def update_md5(self, key, value):
+
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
+
+        # Assemble the full grant description.
+        description = " ".join([
+            str(self.uid),
+            str(self.acronym),
+            str(self.agency),
+            str(self.country),
+        ])
+
+        # Encode the full description to UTF8 (in case it contains unicode
+        # characters).
+        description_encoded = description.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded full description and store it
+        # under the `md5` attribute.
+        md5 = hashlib.md5(description_encoded).digest()
+        self.md5 = md5
+
+        return value
 
 
 class Journal(Base, OrmBase):

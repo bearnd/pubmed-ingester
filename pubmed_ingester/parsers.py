@@ -4,10 +4,11 @@ import abc
 import gzip
 from lxml import etree
 
-from .loggers import create_logger
-from .parser_utils import parse_date_element
-from .parser_utils import convert_yn_boolean
-from .parser_utils import clean_orcid_identifier
+from pubmed_ingester.loggers import create_logger
+from pubmed_ingester.parser_utils import parse_date_element
+from pubmed_ingester.parser_utils import extract_year_from_medlinedate
+from pubmed_ingester.parser_utils import convert_yn_boolean
+from pubmed_ingester.parser_utils import clean_orcid_identifier
 
 
 class ParserXmlBase(object):
@@ -26,6 +27,9 @@ class ParserXmlBase(object):
         if element is not None:
             text = element.text
 
+        if not text:
+            text = None
+
         return text
 
     @staticmethod
@@ -35,6 +39,9 @@ class ParserXmlBase(object):
         value = None
         if element is not None:
             value = element.get(attribute)
+
+        if not value:
+            value = None
 
         return value
 
@@ -81,6 +88,7 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
     def parse_medline_journal_info(self, element):
 
+        # TODO: turn these guards into a decorator
         if element is None:
             return {}
 
@@ -222,6 +230,12 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             }
         }
 
+        if journal_issue["JournalIssue"]["PubDate"]["Year"] is None:
+            year = extract_year_from_medlinedate(
+                pubdate_element=element.find("PubDate")
+            )
+            journal_issue["JournalIssue"]["PubDate"]["Year"] = year
+
         return journal_issue
 
     def parse_journal(self, element):
@@ -321,6 +335,11 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             "NlmCategory": self._eav(element, "NlmCategory"),
         }
 
+        # Guard to ensure entries without any abstract text don't return dud
+        # entries but rather an empty `dict`.
+        if not self._et(element):
+            return {}
+
         return abstract_text
 
     def parse_abstract(self, element):
@@ -333,6 +352,16 @@ class ParserXmlPubmedArticle(ParserXmlBase):
                 "AbstractText": self.parse_abstract_text(_element)
             } for _element in element.findall("AbstractText")]
         }
+
+        # Guard to ensure that if all AbstractText documents are empty then an
+        # empty dictionary is returned.
+        all_empty = True
+        for entry in abstract["AbstractTexts"]:
+            if entry != {"AbstractText": {}}:
+                all_empty = False
+                break
+        if all_empty:
+            return {}
 
         return abstract
 
@@ -357,6 +386,10 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             "UI": self._eav(element, "UI"),
         }
 
+        # Guard against elements with an empty `UI` attribute.
+        if not publication_type["UI"]:
+            return {}
+
         return publication_type
 
     def parse_publication_type_list(self, element):
@@ -365,10 +398,17 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             return {}
 
         publication_type_list = {
-            "PublicationTypes": [{
-                "PublicationType": self.parse_publication_type(_element)
-            } for _element in element.findall("PublicationType")]
+            "PublicationTypes": []
         }
+
+        # Iterate and parse the `PublicationType` elements into documents.
+        for _element in element.findall("PublicationType"):
+            document = self.parse_publication_type(_element)
+            # Only append non-empty documents.
+            if document:
+                publication_type_list["PublicationTypes"].append({
+                    "PublicationType": document
+                })
 
         return publication_type_list
 
@@ -428,6 +468,44 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         return databank_list
 
+    def parse_grant(
+        self,
+        element: etree.Element
+    ) -> dict:
+
+        if element is None:
+            return {}
+
+        databank = {
+            "GrantID": self._et(element.find("GrantID")),
+            "Acronym": self._et(element.find("Acronym")),
+            "Agency": self._et(element.find("Agency")),
+            "Country": self._et(element.find("Country")),
+        }
+
+        return databank
+
+    def parse_grant_list(
+        self,
+        element: etree.Element
+    ) -> dict:
+
+        if element is None:
+            return {}
+
+        grant_list = {
+            "CompleteYN": self._eav(element, "CompleteYN"),
+            "Grants": [{
+                "Grant": self.parse_grant(_element)
+            } for _element in element.findall("Grant")]
+        }
+
+        grant_list["IsComplete"] = convert_yn_boolean(
+            grant_list["CompleteYN"]
+        )
+
+        return grant_list
+
     def parse_article(self, element):
 
         if element is None:
@@ -446,12 +524,20 @@ class ParserXmlPubmedArticle(ParserXmlBase):
                 "DataBankList": self.parse_databank_list(
                     element.find("DataBankList")
                 ),
+                "GrantList": self.parse_grant_list(
+                    element.find("GrantList")
+                ),
                 "PublicationTypeList": self.parse_publication_type_list(
                     element.find("PublicationTypeList")
                 ),
-                "ArticleDate": parse_date_element(element.find("ArticleDate"))
+                "ArticleDate": parse_date_element(element.find("ArticleDate")),
+                "VernacularTitle": self._et(element.find("VernacularTitle")),
             }
         }
+
+        # Guard against empty `ArticleTitle` elements.
+        if not article["Article"]["ArticleTitle"]:
+            return {}
 
         return article
 
@@ -486,8 +572,13 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             ),
             "KeywordList": self.parse_keyword_list(
                 element.find("KeywordList")
-            )
+            ),
+            "NumberOfReferences": self._et(element.find("NumberOfReferences"))
         }
+
+        # Guard against empty `Article` documents.
+        if not medline_citation["Article"]:
+            return {}
 
         return medline_citation
 
@@ -545,6 +636,10 @@ class ParserXmlPubmedArticle(ParserXmlBase):
             )
         }
 
+        # Guard against empty `MedlineCitation` documents.
+        if not pubmed_article["MedlineCitation"]:
+            return {}
+
         return pubmed_article
 
     def parse(self, filename_xml):
@@ -561,5 +656,9 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         for element in elements:
             pubmed_article = self.parse_pubmed_article(element)
+
+            # Guard against empty documents.
+            if not pubmed_article:
+                continue
 
             yield pubmed_article

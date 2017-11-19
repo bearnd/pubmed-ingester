@@ -3,7 +3,7 @@
 from sqlalchemy.dialects.postgresql import insert
 
 import datetime
-from typing import List
+from typing import List, Union
 
 from .loggers import create_logger
 from .dal_base import DalBase
@@ -305,7 +305,7 @@ class DalPubmed(DalBase):
             for publication_type_obj in publication_type_objs:
                 if uid == publication_type_obj.uid:
                     publication_type_obj_ids.append(
-                        publication_type_obj.publication_type
+                        publication_type_obj.publication_type_id
                     )
 
         return publication_type_obj_ids
@@ -444,12 +444,12 @@ class DalPubmed(DalBase):
     @with_session_scope()
     def bget_grants(
         self,
-        uids: List[str],
+        md5s: List[str],
         session=None
     ) -> List[Grant]:
 
         query = session.query(Grant)
-        query = query.filter(Grant.uid.in_(uids))
+        query = query.filter(Grant.md5.in_(md5s))
 
         grant_objs = query.all()
 
@@ -463,6 +463,7 @@ class DalPubmed(DalBase):
         acronyms: List[str],
         agencies: List[str],
         countries: List[str],
+        md5s: List[str],
         session=None
     ) -> List[int]:
 
@@ -474,23 +475,26 @@ class DalPubmed(DalBase):
                     "acronym": acronym,
                     "agency": agency,
                     "country": country,
+                    "md5": md5,
                 } for (
                     uid,
                     acronym,
                     agency,
                     country,
+                    md5,
                 ) in zip(
                     uids,
                     acronyms,
                     agencies,
                     countries,
+                    md5s,
                 )
             )
         ).on_conflict_do_nothing()
 
         session.execute(statement)
 
-        grant_objs = self.bget_grants(uids=uids, session=session)
+        grant_objs = self.bget_grants(md5s=md5s, session=session)
 
         grant_obj_ids = []
         for uid in uids:
@@ -572,7 +576,7 @@ class DalPubmed(DalBase):
     ) -> List[int]:
 
         statement = insert(
-            Databank,
+            AccessionNumber,
             values=list(
                 {
                     "accession_number": accession_number,
@@ -607,6 +611,7 @@ class DalPubmed(DalBase):
         self,
         article_id: int,
         abstract_text_ids: List[int],
+        ordinances: List[int],
         session=None
     ) -> None:
 
@@ -616,7 +621,11 @@ class DalPubmed(DalBase):
                 {
                     "article_id": article_id,
                     "abstract_text_id": abstract_text_id,
-                } for abstract_text_id in zip(abstract_text_ids)
+                    "ordinance": ordinance,
+                } for (
+                    abstract_text_id,
+                    ordinance,
+                ) in zip(abstract_text_ids, ordinances)
             )
         ).on_conflict_do_nothing()
 
@@ -627,8 +636,8 @@ class DalPubmed(DalBase):
     def biodi_article_author_affiliations(
         self,
         article_id: int,
-        author_id: int,
-        affiliation_ids: List[int],
+        author_ids: List[int],
+        affiliation_ids: Union[List[int], List[None]],
         ordinances: List[int],
         session=None,
     ) -> None:
@@ -641,7 +650,8 @@ class DalPubmed(DalBase):
                     "author_id": author_id,
                     "affiliation_id": affiliation_id,
                     "ordinance": ordinance,
-                } for affiliation_id, ordinance in zip(
+                } for author_id, affiliation_id, ordinance in zip(
+                    author_ids,
                     affiliation_ids,
                     ordinances
                 )

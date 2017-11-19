@@ -561,7 +561,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         for ordinance, (author_id, document) in enumerate(
             zip(author_ids, documents)
         ):
-            doc = document["Author"]
+            doc = document["Author"]["Author"]
 
             # Get the `AffiliationInfo` document and (if it exists) add the
             # affiliations for this author.
@@ -576,7 +576,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             for _affiliation_id in affiliation_ids:
                 _author_ids.append(author_id)
                 _affiliation_ids.append(_affiliation_id)
-                _ordinances.append(ordinance)
+                _ordinances.append(ordinance + 1)
 
         self.dal.biodi_article_author_affiliations(
             article_id=article_id,
@@ -595,7 +595,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         acronyms = []
         agencies = []
         countries = []
-        md5s= []
+        md5s = []
         for document in documents:
             doc = document["Grant"]
 

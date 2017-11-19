@@ -1079,7 +1079,7 @@ class Databank(Base, OrmBase):
     # Autoincrementing primary key ID.
     databank_id = sqlalchemy.Column(
         name="databank_id",
-        type_=sqlalchemy.types.SmallInteger(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )
@@ -1129,7 +1129,7 @@ class Descriptor(Base, OrmBase):
     # Autoincrementing primary key ID.
     descriptor_id = sqlalchemy.Column(
         name="descriptor_id",
-        type_=sqlalchemy.types.Integer(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )
@@ -1222,7 +1222,7 @@ class Journal(Base, OrmBase):
     # Autoincrementing primary key ID.
     journal_id = sqlalchemy.Column(
         name="journal_id",
-        type_=sqlalchemy.types.Integer(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )
@@ -1306,7 +1306,7 @@ class JournalInfo(Base, OrmBase):
     # Autoincrementing primary key ID.
     journal_info_id = sqlalchemy.Column(
         name="journal_info_id",
-        type_=sqlalchemy.types.Integer(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )
@@ -1351,7 +1351,7 @@ class Keyword(Base, OrmBase):
     # Autoincrementing primary key ID.
     keyword_id = sqlalchemy.Column(
         name="keyword_id",
-        type_=sqlalchemy.types.Integer(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )
@@ -1407,7 +1407,7 @@ class PublicationType(Base, OrmBase):
     # Autoincrementing primary key ID.
     publication_type_id = sqlalchemy.Column(
         name="publication_type_id",
-        type_=sqlalchemy.types.SmallInteger(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )
@@ -1450,7 +1450,7 @@ class Qualifier(Base, OrmBase):
     # Autoincrementing primary key ID.
     qualifier_id = sqlalchemy.Column(
         name="qualifier_id",
-        type_=sqlalchemy.types.Integer(),
+        type_=sqlalchemy.types.BigInteger(),
         primary_key=True,
         autoincrement="auto",
     )

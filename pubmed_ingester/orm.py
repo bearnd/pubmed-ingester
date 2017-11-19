@@ -171,7 +171,7 @@ class AbstractText(Base, OrmBase):
 
         # Encode the abstract text to UTF8 (in case it contains unicode
         # characters).
-        text_encoded = value.encode("utf-8")
+        text_encoded = str(value).encode("utf-8")
 
         # Calculate the MD5 hash of the encoded abstract text and store
         # under the `md5` attribute.
@@ -221,7 +221,7 @@ class AccessionNumber(Base, OrmBase):
 
         # Encode the accession number to UTF8 (in case it contains unicode
         # characters).
-        accession_number_encoded = value.encode("utf-8")
+        accession_number_encoded = str(value).encode("utf-8")
 
         # Calculate the MD5 hash of the encoded accession number  and store
         # under the `md5` attribute.
@@ -289,16 +289,19 @@ class Affiliation(Base, OrmBase):
         back_populates="affiliations",
     )
 
-    @sqlalchemy.orm.validates("affiliation", "affiliation_identifier")
+    @sqlalchemy.orm.validates(
+        "affiliation",
+        "affiliation_identifier",
+    )
     def update_md5(self, key, value):
 
         # Dumb hack to make the linter shut up that the `key` isn't used.
         assert key
 
-        # Retrieve the full concatenated name.
         affiliation_full = " ".join([
+            str(self.affiliation),
             str(self.affiliation_identifier),
-            self.affiliation
+            str(value),
         ])
 
         # Encode the full concatenated name to UTF8 (in case it contains
@@ -481,7 +484,7 @@ class Article(Base, OrmBase):
         assert key
 
         # Encode the title to UTF8 (in case it contains unicode characters).
-        title_encoded = value.encode("utf-8")
+        title_encoded = str(value).encode("utf-8")
 
         # Calculate the MD5 hash of the title and store under the `md5`
         # attribute.
@@ -925,7 +928,8 @@ class Author(Base, OrmBase):
         # Retrieve the full concatenated name.
         name = " ".join([
             str(self.author_identifier),
-            self.name_full()
+            self.name_full(),
+            str(value),
         ])
 
         # Encode the full concatenated name to UTF8 (in case it contains
@@ -1132,7 +1136,7 @@ class Databank(Base, OrmBase):
 
         # Encode the databank name to UTF8 (in case it contains unicode
         # characters).
-        databank_name_encoded = value.encode("utf-8")
+        databank_name_encoded = str(value).encode("utf-8")
 
         # Calculate the MD5 hash of the encoded databank name and store under
         # the `md5` attribute.
@@ -1260,6 +1264,7 @@ class Grant(Base, OrmBase):
             str(self.acronym),
             str(self.agency),
             str(self.country),
+            str(value),
         ])
 
         # Encode the full description to UTF8 (in case it contains unicode
@@ -1343,7 +1348,8 @@ class Journal(Base, OrmBase):
         # Retrieve the full concatenated name.
         journal_title_full = " ".join([
             str(self.title),
-            str(self.abbreviation)
+            str(self.abbreviation),
+            str(value),
         ])
 
         # Encode the full concatenated name to UTF8 (in case it contains
@@ -1449,7 +1455,7 @@ class Keyword(Base, OrmBase):
         assert key
 
         # Encode the keyword to UTF8 (in case it contains unicode characters).
-        keyword_encoded = value.encode("utf-8")
+        keyword_encoded = str(value).encode("utf-8")
 
         # Calculate the MD5 hash of the encoded keyword and store under the
         # `md5` attribute.

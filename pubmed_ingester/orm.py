@@ -350,7 +350,7 @@ class Article(Base, OrmBase):
     # Article publication model (referring to the `PubModel` attribute of the
     # `<Article>` element).
     publication_model = sqlalchemy.Column(
-        name="pub_model",
+        name="publication_model",
         type_=sqlalchemy.types.Enum(ArticlePubModel),
         nullable=True,
         default=None,

@@ -16,6 +16,7 @@ from .orm import Descriptor
 from .orm import Qualifier
 from .orm import PublicationType
 from .orm import Journal
+from .orm import JournalIssnType
 from .orm import JournalInfo
 from .orm import Grant
 from .orm import Databank
@@ -400,6 +401,7 @@ class DalPubmed(DalBase):
         self,
         affiliation_identifiers: List[str],
         affiliation_identifier_sources: List[str],
+        affiliations: List[str],
         md5s: List[str],
         session=None
     ) -> List[int]:
@@ -411,15 +413,18 @@ class DalPubmed(DalBase):
                     "affiliation_identifier": affiliation_identifier,
                     "affiliation_identifier_source":
                         affiliation_identifier_source,
+                    "affiliation": affiliation,
                     "md5": md5,
                 } for (
                     affiliation_identifier,
                     affiliation_identifier_source,
+                    affiliation,
                     md5,
                 ) in zip(
                     affiliation_identifiers,
                     affiliation_identifier_sources,
-                    md5s
+                    affiliations,
+                    md5s,
                 )
             )
         ).on_conflict_do_nothing()
@@ -435,133 +440,6 @@ class DalPubmed(DalBase):
                     affiliation_obj_ids.append(affiliation_obj.affiliation_id)
 
         return affiliation_obj_ids
-
-    @with_session_scope()
-    def bget_journal_infos(
-        self,
-        nlmids: List[str],
-        session=None
-    ) -> List[JournalInfo]:
-
-        query = session.query(JournalInfo)
-        query = query.filter(JournalInfo.nlmid.in_(nlmids))
-
-        journal_info_objs = query.all()
-
-        return journal_info_objs
-
-    @lists_equal_length
-    @with_session_scope()
-    def biodi_journal_infos(
-        self,
-        nlmids: List[str],
-        issns: List[str],
-        countries: List[str],
-        abbreviations: List[str],
-        session=None
-    ) -> List[int]:
-
-        statement = insert(
-            JournalInfo,
-            values=list(
-                {
-                    "nlmid": nlmid,
-                    "issn": issn,
-                    "country": country,
-                    "abbreviation": abbreviation,
-                } for (
-                    nlmid,
-                    issn,
-                    country,
-                    abbreviation,
-                ) in zip(
-                    nlmids,
-                    issns,
-                    countries,
-                    abbreviations,
-                )
-            )
-        ).on_conflict_do_nothing()
-
-        session.execute(statement)
-
-        journal_info_objs = self.bget_journal_infos(
-            nlmids=nlmids,
-            session=session
-        )
-
-        journal_info_obj_ids = []
-        for nlmid in nlmids:
-            for journal_info_obj in journal_info_objs:
-                if nlmid == journal_info_obj.nlmid:
-                    journal_info_obj_ids.append(
-                        journal_info_obj.journal_info_id
-                    )
-
-        return journal_info_obj_ids
-
-    @with_session_scope()
-    def bget_journals(
-        self,
-        md5s: List[str],
-        session=None
-    ) -> List[Journal]:
-
-        query = session.query(Journal)
-        query = query.filter(Journal.md5.in_(md5s))
-
-        journal_objs = query.all()
-
-        return journal_objs
-
-    @lists_equal_length
-    @with_session_scope()
-    def biodi_journals(
-        self,
-        issns: List[str],
-        issn_types: List[str],
-        titles: List[str],
-        abbreviations: List[str],
-        md5s: List[str],
-        session=None
-    ) -> List[int]:
-
-        statement = insert(
-            Journal,
-            values=list(
-                {
-                    "issn": nlmid,
-                    "issn_type": issn,
-                    "title": title,
-                    "abbreviation": abbreviation,
-                    "md5s": md5,
-                } for (
-                    nlmid,
-                    issn,
-                    title,
-                    abbreviation,
-                    md5,
-                ) in zip(
-                    issns,
-                    issn_types,
-                    titles,
-                    abbreviations,
-                    md5s,
-                )
-            )
-        ).on_conflict_do_nothing()
-
-        session.execute(statement)
-
-        journal_objs = self.bget_journals(md5s=md5s, session=session)
-
-        journal_obj_ids = []
-        for md5 in md5s:
-            for journal_obj in journal_objs:
-                if md5 == journal_obj.md5:
-                    journal_obj_ids.append(journal_obj.journal_id)
-
-        return journal_obj_ids
 
     @with_session_scope()
     def bget_grants(
@@ -955,6 +833,20 @@ class DalPubmed(DalBase):
 
         session.execute(statement)
 
+    @with_session_scope()
+    def bget_abstract_texts(
+        self,
+        md5s: List[str],
+        session=None
+    ) -> List[AbstractText]:
+
+        query = session.query(AbstractText)
+        query = query.filter(AbstractText.md5.in_(md5s))
+
+        abstract_text_objs = query.all()
+
+        return abstract_text_objs
+
     @lists_equal_length
     @with_session_scope()
     def biodi_abstract_texts(
@@ -962,8 +854,9 @@ class DalPubmed(DalBase):
         labels: str,
         categories: List[AbstractTextCategory],
         texts: List[str],
+        md5s: List[str],
         session=None,
-    ) -> None:
+    ) -> List[int]:
 
         statement = insert(
             AbstractText,
@@ -972,15 +865,120 @@ class DalPubmed(DalBase):
                     "label": label,
                     "category": category,
                     "text": text,
-                } for label, category, text in zip(
+                    "md5": md5,
+                } for label, category, text, md5 in zip(
                     labels,
                     categories,
-                    texts
+                    texts,
+                    md5s,
                 )
             )
         ).on_conflict_do_nothing()
 
         session.execute(statement)
+
+        abstract_text_objs = self.bget_abstract_texts(
+            md5s=md5s,
+            session=session
+        )
+
+        abstract_text_obj_ids = []
+        for md5 in md5s:
+            for abstract_text_obj in abstract_text_objs:
+                if md5 == abstract_text_obj.md5:
+                    abstract_text_obj_ids.append(
+                        abstract_text_obj.abstract_text_id
+                    )
+
+        return abstract_text_obj_ids
+
+    @with_session_scope()
+    def get_journal_info_by_nlmid(
+        self,
+        nlmid: str,
+        session=None
+    ) -> JournalInfo:
+
+        query = session.query(JournalInfo)
+        query = query.filter(JournalInfo.nlmid == nlmid)
+
+        journal_info_obj = query.first()
+
+        return journal_info_obj
+
+    @with_session_scope()
+    def iodi_journal_info(
+        self,
+        nlmid: str,
+        issn: str,
+        country: str,
+        abbreviation: str,
+        session=None
+    ) -> int:
+
+        statement = insert(
+            JournalInfo,
+            values={
+                "nlmid": nlmid,
+                "issn": issn,
+                "country": country,
+                "abbreviation": abbreviation,
+            }
+        ).on_conflict_do_nothing()
+
+        session.execute(statement)
+
+        journal_info_obj = self.get_journal_info_by_nlmid(
+            nlmid=nlmid,
+            session=session
+        )
+
+        return journal_info_obj.journal_info_id
+
+    @with_session_scope()
+    def get_journal_by_md5(
+        self,
+        md5: str,
+        session=None
+    ) -> Journal:
+
+        query = session.query(Journal)
+        query = query.filter(Journal.md5 == md5)
+
+        journal_obj = query.first()
+
+        return journal_obj
+
+    @with_session_scope()
+    def iodi_journal(
+        self,
+        issn: str,
+        issn_type: JournalIssnType,
+        title: str,
+        abbreviation: str,
+        md5: str,
+        session=None
+    ) -> int:
+
+        statement = insert(
+            Journal,
+            values={
+                "issn": issn,
+                "issn_type": issn_type,
+                "title": title,
+                "abbreviation": abbreviation,
+                "md5": md5,
+            }
+        ).on_conflict_do_nothing()
+
+        session.execute(statement)
+
+        journal_obj = self.get_journal_by_md5(
+            md5=md5,
+            session=session
+        )
+
+        return journal_obj.journal_id
 
     @with_session_scope()
     def add_article(
@@ -1015,6 +1013,68 @@ class DalPubmed(DalBase):
         article_obj.title_vernacular = title_vernacular
 
         session.add(article_obj)
+        session.flush([article_obj])
+
+        return article_obj.article_id
+
+    @with_session_scope()
+    def get_article_by_md5(
+        self,
+        md5: str,
+        session=None
+    ) -> Article:
+
+        query = session.query(Article)
+        query = query.filter(Article.md5 == md5)
+
+        journal_obj = query.first()
+
+        return journal_obj
+
+    @with_session_scope()
+    def iodi_article(
+        self,
+        publication_year: int,
+        publication_month: int,
+        publication_day: int,
+        date_published: datetime.date,
+        publication_model: ArticlePubModel,
+        journal_id: int,
+        journal_volume: str,
+        journal_issue: str,
+        title: str,
+        pagination: str,
+        language: str,
+        title_vernacular: str,
+        md5: str,
+        session=None,
+    ) -> int:
+
+        statement = insert(
+            Article,
+            values={
+                "publication_year": publication_year,
+                "publication_month": publication_month,
+                "publication_day": publication_day,
+                "date_published": date_published,
+                "publication_model": publication_model,
+                "journal_id": journal_id,
+                "journal_volume": journal_volume,
+                "journal_issue": journal_issue,
+                "title": title,
+                "pagination": pagination,
+                "language": language,
+                "title_vernacular": title_vernacular,
+                "md5": md5,
+            }
+        ).on_conflict_do_nothing()
+
+        session.execute(statement)
+
+        article_obj = self.get_article_by_md5(
+            md5=md5,
+            session=session
+        )
 
         return article_obj.article_id
 
@@ -1030,6 +1090,7 @@ class DalPubmed(DalBase):
         num_references: int,
         session=None
     ) -> int:
+
         citation_obj = Citation()
         citation_obj.pmid = pmid
         citation_obj.date_created = date_created
@@ -1040,5 +1101,55 @@ class DalPubmed(DalBase):
         citation_obj.num_references = num_references
 
         session.add(citation_obj)
+        session.flush([citation_obj])
+
+        return citation_obj.citation_id
+
+    @with_session_scope()
+    def get_citation_by_pmid(
+        self,
+        pmid: int,
+        session=None
+    ) -> Citation:
+
+        query = session.query(Citation)
+        query = query.filter(Citation.pmid == pmid)
+
+        citation_obj = query.first()
+
+        return citation_obj
+
+    @with_session_scope()
+    def iodi_citation(
+        self,
+        pmid: int,
+        date_created: datetime.date,
+        date_completion: datetime.date,
+        date_revision: datetime.date,
+        article_id: int,
+        journal_info_id: int,
+        num_references: int,
+        session=None,
+    ) -> int:
+
+        statement = insert(
+            Citation,
+            values={
+                "pmid": pmid,
+                "date_created": date_created,
+                "date_completion": date_completion,
+                "date_revision": date_revision,
+                "article_id": article_id,
+                "journal_info_id": journal_info_id,
+                "num_references": num_references,
+            }
+        ).on_conflict_do_nothing()
+
+        session.execute(statement)
+
+        citation_obj = self.get_citation_by_pmid(
+            pmid=pmid,
+            session=session
+        )
 
         return citation_obj.citation_id

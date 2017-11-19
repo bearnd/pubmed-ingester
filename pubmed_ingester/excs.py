@@ -43,3 +43,10 @@ class InvalidArguments(Exception):
     invalid."""
     def __init__(self, message, *args):
         super(InvalidArguments, self).__init__(message, *args)
+
+
+class InvalidDateValues(Exception):
+    """Exception raised when the arguments assembled into a ``datetime.date``
+    are invalid."""
+    def __init__(self, message, *args):
+        super(InvalidDateValues, self).__init__(message, *args)

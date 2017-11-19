@@ -166,6 +166,9 @@ class AbstractText(Base, OrmBase):
     @sqlalchemy.orm.validates("text")
     def update_md5(self, key, value):
 
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
+
         # Encode the abstract text to UTF8 (in case it contains unicode
         # characters).
         text_encoded = value.encode("utf-8")
@@ -212,6 +215,9 @@ class AccessionNumber(Base, OrmBase):
 
     @sqlalchemy.orm.validates("accession_number")
     def update_md5(self, key, value):
+
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
 
         # Encode the accession number to UTF8 (in case it contains unicode
         # characters).
@@ -285,6 +291,9 @@ class Affiliation(Base, OrmBase):
 
     @sqlalchemy.orm.validates("affiliation", "affiliation_identifier")
     def update_md5(self, key, value):
+
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
 
         # Retrieve the full concatenated name.
         affiliation_full = " ".join([
@@ -462,6 +471,9 @@ class Article(Base, OrmBase):
 
     @sqlalchemy.orm.validates("title")
     def update_md5(self, key, value):
+
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
 
         # Encode the title to UTF8 (in case it contains unicode characters).
         title_encoded = value.encode("utf-8")
@@ -882,6 +894,9 @@ class Author(Base, OrmBase):
     )
     def update_md5(self, key, value):
 
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
+
         # Retrieve the full concatenated name.
         name = " ".join([
             str(self.author_identifier),
@@ -1082,6 +1097,9 @@ class Databank(Base, OrmBase):
     @sqlalchemy.orm.validates("databank")
     def update_md5(self, key, value):
 
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
+
         # Encode the databank name to UTF8 (in case it contains unicode
         # characters).
         databank_name_encoded = value.encode("utf-8")
@@ -1242,6 +1260,9 @@ class Journal(Base, OrmBase):
     @sqlalchemy.orm.validates("title", "abbreviation")
     def update_md5(self, key, value):
 
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
+
         # Retrieve the full concatenated name.
         journal_title_full = " ".join([
             str(self.title),
@@ -1346,6 +1367,9 @@ class Keyword(Base, OrmBase):
 
     @sqlalchemy.orm.validates("keyword")
     def update_md5(self, key, value):
+
+        # Dumb hack to make the linter shut up that the `key` isn't used.
+        assert key
 
         # Encode the keyword to UTF8 (in case it contains unicode characters).
         keyword_encoded = value.encode("utf-8")

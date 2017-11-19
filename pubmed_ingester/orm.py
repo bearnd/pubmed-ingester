@@ -147,12 +147,35 @@ class AbstractText(Base, OrmBase):
         nullable=True,
     )
 
+    # MD5 hash of the abstract text.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
     # Relationship to an `Article` record.
     article = sqlalchemy.orm.relationship(
         argument="Article",
         secondary="article_abstract_texts",
         back_populates="abstract_texts"
     )
+
+    @sqlalchemy.orm.validates("text")
+    def update_md5(self, key, value):
+
+        # Encode the abstract text to UTF8 (in case it contains unicode
+        # characters).
+        text_encoded = value.encode("utf-8")
+
+        # Calculate the MD5 hash of the encoded abstract text and store
+        # under the `md5` attribute.
+        md5 = hashlib.md5(text_encoded).digest()
+        self.md5 = md5
+
+        return value
 
 
 class AccessionNumber(Base, OrmBase):
@@ -383,6 +406,14 @@ class Article(Base, OrmBase):
         nullable=True
     )
 
+    # MD5 hash of the `title` field.
+    md5 = sqlalchemy.Column(
+        name="md5",
+        type_=sqlalchemy.types.Binary(),
+        unique=True,
+        index=True
+    )
+
     # Relationship to a `Journal` record.
     journal = sqlalchemy.orm.relationship(
         argument="Journal"
@@ -428,6 +459,19 @@ class Article(Base, OrmBase):
         secondary="article_author_affiliations",
         back_populates="articles",
     )
+
+    @sqlalchemy.orm.validates("title")
+    def update_md5(self, key, value):
+
+        # Encode the title to UTF8 (in case it contains unicode characters).
+        affiliation_encoded = value.encode("utf-8")
+
+        # Calculate the MD5 hash of the title and store under the `md5`
+        # attribute.
+        md5 = hashlib.md5(affiliation_encoded).digest()
+        self.md5 = md5
+
+        return value
 
 
 class ArticleAbstractText(Base, OrmBase):

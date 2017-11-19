@@ -926,7 +926,7 @@ class Chemical(Base, OrmBase):
     # `<NameOfSubstance>` element).
     uid = sqlalchemy.Column(
         name="uid",
-        type_=sqlalchemy.types.Unicode(length=7),
+        type_=sqlalchemy.types.Unicode(),
         unique=True,
         index=True,
         nullable=False,
@@ -1112,7 +1112,7 @@ class Descriptor(Base, OrmBase):
     # element).
     uid = sqlalchemy.Column(
         name="uid",
-        type_=sqlalchemy.types.Unicode(length=7),
+        type_=sqlalchemy.types.Unicode(),
         unique=True,
         index=True,
         nullable=False,
@@ -1376,7 +1376,7 @@ class PublicationType(Base, OrmBase):
     # `<PublicationType>` element).
     uid = sqlalchemy.Column(
         name="uid",
-        type_=sqlalchemy.types.Unicode(length=7),
+        type_=sqlalchemy.types.Unicode(),
         unique=True,
         nullable=False,
         index=True,
@@ -1415,7 +1415,7 @@ class Qualifier(Base, OrmBase):
     # element).
     uid = sqlalchemy.Column(
         name="uid",
-        type_=sqlalchemy.types.Unicode(length=7),
+        type_=sqlalchemy.types.Unicode(),
         unique=True,
         nullable=False,
         index=True,

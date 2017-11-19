@@ -215,7 +215,7 @@ class AccessionNumber(Base, OrmBase):
 
         # Encode the accession number to UTF8 (in case it contains unicode
         # characters).
-        accession_number_encoded = self.accession_number.encode("utf-8")
+        accession_number_encoded = value.encode("utf-8")
 
         # Calculate the MD5 hash of the encoded accession number  and store
         # under the `md5` attribute.
@@ -464,11 +464,11 @@ class Article(Base, OrmBase):
     def update_md5(self, key, value):
 
         # Encode the title to UTF8 (in case it contains unicode characters).
-        affiliation_encoded = value.encode("utf-8")
+        title_encoded = value.encode("utf-8")
 
         # Calculate the MD5 hash of the title and store under the `md5`
         # attribute.
-        md5 = hashlib.md5(affiliation_encoded).digest()
+        md5 = hashlib.md5(title_encoded).digest()
         self.md5 = md5
 
         return value
@@ -1084,7 +1084,7 @@ class Databank(Base, OrmBase):
 
         # Encode the databank name to UTF8 (in case it contains unicode
         # characters).
-        databank_name_encoded = self.databank.encode("utf-8")
+        databank_name_encoded = value.encode("utf-8")
 
         # Calculate the MD5 hash of the encoded databank name and store under
         # the `md5` attribute.
@@ -1348,7 +1348,7 @@ class Keyword(Base, OrmBase):
     def update_md5(self, key, value):
 
         # Encode the keyword to UTF8 (in case it contains unicode characters).
-        keyword_encoded = self.keyword.encode("utf-8")
+        keyword_encoded = value.encode("utf-8")
 
         # Calculate the MD5 hash of the encoded keyword and store under the
         # `md5` attribute.

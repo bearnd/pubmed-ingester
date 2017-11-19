@@ -369,6 +369,7 @@ class Article(Base, OrmBase):
     journal_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("journals.journal_id"),
         name="journal_id",
+        nullable=False
     )
 
     # Journal volume under which the article was published (referring to the
@@ -508,12 +509,14 @@ class ArticleAbstractText(Base, OrmBase):
     article_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("articles.article_id"),
         name="article_id",
+        nullable=False,
     )
 
     # Foreign key to the author ID.
     abstract_text_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("abstract_texts.abstract_text_id"),
         name="abstract_text_id",
+        nullable=False,
     )
 
     # Ordinance of the abstract text in the abstract.
@@ -543,18 +546,21 @@ class ArticleAuthorAffiliation(Base, OrmBase):
     article_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("articles.article_id"),
         name="article_id",
+        nullable=False
     )
 
     # Foreign key to the author ID.
     author_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("authors.author_id"),
         name="author_id",
+        nullable=False
     )
 
     # Foreign key to the author ID.
     affiliation_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("affiliations.affiliation_id"),
         name="affiliation_id",
+        nullable=True
     )
 
     # Ordinance of the author in the article.
@@ -584,18 +590,21 @@ class ArticleDatabankAccessionNumber(Base, OrmBase):
     article_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("articles.article_id"),
         name="article_id",
+        nullable=False,
     )
 
     # Foreign key to the databank ID.
     databank_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("databanks.databank_id"),
         name="databank_id",
+        nullable=False,
     )
 
     # Foreign key to the accession number ID.
     accession_number_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("accession_numbers.accession_number_id"),
         name="accession_number_id",
+        nullable=False,
     )
 
     # Relationship to an `Article` record.
@@ -623,12 +632,14 @@ class ArticleGrant(Base, OrmBase):
     article_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("articles.article_id"),
         name="article_id",
+        nullable=False,
     )
 
     # Foreign key to the grant ID.
     grant_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("grants.grant_id"),
         name="grant_id",
+        nullable=False
     )
 
 
@@ -650,12 +661,14 @@ class CitationChemical(Base, OrmBase):
     citation_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("citations.citation_id"),
         name="citation_id",
+        nullable=False,
     )
 
     # Foreign key to the chemical ID.
     chemical_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("chemicals.chemical_id"),
         name="chemical_id",
+        nullable=False,
     )
 
 
@@ -678,12 +691,14 @@ class CitationDescriptorQualifier(Base, OrmBase):
     citation_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("citations.citation_id"),
         name="citation_id",
+        nullable=False,
     )
 
     # Foreign key to the descriptor ID.
     descriptor_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("descriptors.descriptor_id"),
         name="descriptor_id",
+        nullable=False,
     )
 
     # Whether the descriptor is major or not (referring to the `MajorTopicYN`
@@ -698,6 +713,7 @@ class CitationDescriptorQualifier(Base, OrmBase):
     qualifier_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("qualifiers.qualifier_id"),
         name="qualifier_id",
+        nullable=True,
     )
 
     # Whether the qualifier is major or not (referring to the `MajorTopicYN`
@@ -705,7 +721,7 @@ class CitationDescriptorQualifier(Base, OrmBase):
     is_qualifier_major = sqlalchemy.Column(
         name="is_qualifier_major",
         type_=sqlalchemy.types.Boolean(),
-        nullable=False
+        nullable=True,
     )
 
 
@@ -727,6 +743,7 @@ class CitationIdentifier(Base, OrmBase):
     citation_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("citations.citation_id"),
         name="citation_id",
+        nullable=False,
     )
 
     # Identifier type (referring to the `IdType` attribute of the `<ArticleId>`
@@ -764,12 +781,14 @@ class CitationKeyword(Base, OrmBase):
     citation_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("citations.citation_id"),
         name="citation_id",
+        nullable=False,
     )
 
     # Foreign key to the keyword ID.
     keyword_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("keywords.keyword_id"),
         name="keyword_id",
+        nullable=False,
     )
 
 
@@ -791,12 +810,14 @@ class ArticlePublicationType(Base, OrmBase):
     article_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("articles.article_id"),
         name="article_id",
+        nullable=False,
     )
 
     # Foreign key to the publication type ID.
     publication_type_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("publication_types.publication_type_id"),
         name="publication_type_id",
+        nullable=False,
     )
 
 
@@ -1018,13 +1039,14 @@ class Citation(Base, OrmBase):
     article_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("articles.article_id"),
         name="article_id",
+        nullable=False,
     )
 
     # Foreign key to the journal info ID.
     journal_info_id = sqlalchemy.Column(
         sqlalchemy.ForeignKey("journal_infos.journal_info_id"),
         name="journal_info_id",
-
+        nullable=False,
     )
 
     # Number of references in citation (referring to the `<NumberofReferences>`
@@ -1177,7 +1199,7 @@ class Grant(Base, OrmBase):
         name="uid",
         type_=sqlalchemy.types.Unicode(),
         unique=True,
-        nullable=False
+        nullable=True,
     )
 
     # Grant acronym (referring to the `<Acronym>` element).

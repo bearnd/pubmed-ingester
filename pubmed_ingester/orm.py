@@ -469,6 +469,10 @@ class Article(Base, OrmBase):
         back_populates="articles",
     )
 
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("title <> ''", "title_not_empty"),
+    )
+
     @sqlalchemy.orm.validates("title")
     def update_md5(self, key, value):
 

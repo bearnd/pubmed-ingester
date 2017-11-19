@@ -961,6 +961,10 @@ class Chemical(Base, OrmBase):
         back_populates="chemicals"
     )
 
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("uid <> ''", "uid_not_empty"),
+    )
+
 
 class Citation(Base, OrmBase):
     """Table of `<MedlineCitation>` element records."""
@@ -1145,6 +1149,10 @@ class Descriptor(Base, OrmBase):
         index=True,
     )
 
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("uid <> ''", "uid_not_empty"),
+    )
+
 
 class Grant(Base, OrmBase):
     """Table of `<Grant>` element records."""
@@ -1194,6 +1202,10 @@ class Grant(Base, OrmBase):
         argument="Article",
         secondary="article_grants",
         back_populates="grants"
+    )
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("uid <> ''", "uid_not_empty"),
     )
 
 
@@ -1420,6 +1432,10 @@ class PublicationType(Base, OrmBase):
         back_populates="publication_types"
     )
 
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("uid <> ''", "uid_not_empty"),
+    )
+
 
 class Qualifier(Base, OrmBase):
     """Table of `<Qualifier>` element records."""
@@ -1452,4 +1468,8 @@ class Qualifier(Base, OrmBase):
         unique=True,
         nullable=False,
         index=True,
+    )
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("uid <> ''", "uid_not_empty"),
     )

@@ -9,6 +9,7 @@ from pubmed_ingester.parser_utils import parse_date_element
 from pubmed_ingester.parser_utils import extract_year_from_medlinedate
 from pubmed_ingester.parser_utils import convert_yn_boolean
 from pubmed_ingester.parser_utils import clean_orcid_identifier
+from pubmed_ingester.parser_utils import clean_affiliation_email
 
 
 class ParserXmlBase(object):
@@ -271,6 +272,13 @@ class ParserXmlPubmedArticle(ParserXmlBase):
                 "Affiliation": self._et(_element)
             } for _element in element.findall("Affiliation")]
         }
+
+        # Remove any email entries from the affiliations.
+        for doc in affiliation_info["Affiliations"]:
+            if doc["Affiliation"]:
+                doc["Affiliation"] = clean_affiliation_email(
+                    affiliation_text=doc["Affiliation"]
+                )
 
         return affiliation_info
 

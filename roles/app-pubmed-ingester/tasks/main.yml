@@ -64,15 +64,42 @@
   become: true
   become_user: "{{ app_pubmed_ingester.user }}"
 
-- name: Checkout the project source code from Git
+- name: Upload public deployment key (Production)
+  copy:
+    src: "deployment_key.public"
+    dest: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.public"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
+
+- name: Upload private deployment key (Production)
+  copy:
+    src: "deployment_key.private"
+    dest: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.private"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
+
+- name: Checkout the project source code from Git (Production)
   git:
-    repo: "http://sunny.diskstation.me:30000/bearnd/pubmed-ingester.git"
+    repo: "ssh://git@sunny.diskstation.me/bearnd/pubmed-ingester.git"
     dest: "{{ app_pubmed_ingester.share_dir }}/src"
     depth: 1
     force: yes
+    accept_hostkey: true
+    ssh_opts: "-o StrictHostKeyChecking=no  -o Port=30001"
+    key_file: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.private"
   when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
   become: true
+
+- name: Create configuration file (Development)
+  template:
+    src: "config_dev.json.j2"
+    dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
+    owner: "{{ app_pubmed_ingester.user }}"
+    group: "{{ app_pubmed_ingester.group }}"
+    mode: 0600
+  become: true
   become_user: "{{ app_pubmed_ingester.user }}"
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
 - name: Create configuration file
   template:

@@ -10,6 +10,7 @@ from pubmed_ingester.parser_utils import extract_year_from_medlinedate
 from pubmed_ingester.parser_utils import convert_yn_boolean
 from pubmed_ingester.parser_utils import clean_orcid_identifier
 from pubmed_ingester.parser_utils import clean_affiliation_email
+from pubmed_ingester.parser_utils import extract_affiliation_email
 
 
 class ParserXmlBase(object):
@@ -282,6 +283,20 @@ class ParserXmlPubmedArticle(ParserXmlBase):
 
         return affiliation_info
 
+    def extract_affiliation_info_emails(self, element):
+
+        if element is None:
+            return {}
+
+        emails = []
+        for _element in element.findall("Affiliation"):
+            affiliation_text = self._et(_element)
+            email = extract_affiliation_email(affiliation_text=affiliation_text)
+            if email:
+                emails.append(email)
+
+        return emails
+
     def parse_author(self, element):
 
         if element is None:
@@ -300,9 +315,20 @@ class ParserXmlPubmedArticle(ParserXmlBase):
                 },
                 "AffiliationInfo": self.parse_affiliation_info(
                     element.find("AffiliationInfo")
-                )
+                ),
+                "Email": None,
             }
         }
+
+        emails = self.extract_affiliation_info_emails(
+            element.find("AffiliationInfo")
+        )
+
+        # TODO:
+        # This is not necesserily correct as the author may have multiple
+        # affiliations with emails but we only keep the first.
+        if emails:
+            author["Author"]["Email"] = emails[0]
 
         author["IsValid"] = convert_yn_boolean(author["ValidYN"])
 

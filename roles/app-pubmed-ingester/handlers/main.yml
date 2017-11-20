@@ -1,0 +1,2 @@
+- name: restart pubmed-ingester
+  service: name=pubmed-ingester enabled=yes state=restarted

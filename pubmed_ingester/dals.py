@@ -334,6 +334,7 @@ class DalPubmed(DalBase):
         names_last: List[str],
         names_initials: List[str],
         names_suffix: List[str],
+        emails: List[str],
         md5s: List[str],
         session=None
     ) -> List[int]:
@@ -348,6 +349,7 @@ class DalPubmed(DalBase):
                     "name_last": name_last,
                     "name_initials": name_initials,
                     "name_suffix": name_suffix,
+                    "email": email,
                     "md5": md5,
                 } for (
                     author_identifier,
@@ -356,6 +358,7 @@ class DalPubmed(DalBase):
                     name_last,
                     name_initials,
                     name_suffix,
+                    email,
                     md5,
                 ) in zip(
                     author_identifiers,
@@ -364,7 +367,8 @@ class DalPubmed(DalBase):
                     names_last,
                     names_initials,
                     names_suffix,
-                    md5s
+                    emails,
+                    md5s,
                 )
             )
         ).on_conflict_do_nothing()

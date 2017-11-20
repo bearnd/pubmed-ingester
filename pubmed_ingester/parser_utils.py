@@ -2,6 +2,7 @@
 
 import re
 import datetime
+from typing import Tuple, Union
 
 from pubmed_ingester.loggers import create_logger
 
@@ -25,6 +26,7 @@ month_abbreviations = {
 
 regex_orcid = re.compile("(\d{4}-?\d{4}-?\d{4}-?\d{4})")
 regex_year = re.compile("(\d{4})")
+regex_email = re.compile("([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)")
 
 
 def parse_date_element(date_element):
@@ -114,6 +116,53 @@ def extract_year_from_medlinedate(pubdate_element):
             year_max = int(group)
 
     return year_max
+
+
+def clean_affiliation_email(
+    affiliation_text: str
+) -> Union[str, None]:
+
+    if not affiliation_text:
+        return None
+
+    match = regex_email.search(affiliation_text)
+
+    if match is None:
+        return affiliation_text
+
+    email = match.group(0)
+
+    if email.endswith("."):
+        email = email[:-1]
+
+    affiliation_clean = affiliation_text.replace(email, "")
+    if affiliation_clean.endswith(" ."):
+        affiliation_clean = affiliation_clean[:-2] + "."
+
+    if affiliation_clean.endswith(".."):
+        affiliation_clean = affiliation_clean.replace("..", ".")
+
+    return affiliation_clean
+
+
+def extract_affiliation_email(
+    affiliation_text: str
+) -> Union[str, None]:
+
+    if not affiliation_text:
+        return None
+
+    match = regex_email.search(affiliation_text)
+
+    if match is None:
+        return None
+
+    email = match.group(0)
+
+    if email.endswith("."):
+        email = email[:-1]
+
+    return email
 
 
 def convert_yn_boolean(yn_boolean_raw):

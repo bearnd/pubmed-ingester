@@ -53,9 +53,9 @@ app_pubmed_ingester:
       logger_level: INFO
 
       # PostgreSQL Server Configuration Settings.
-      sql_host: "192.168.0.6"
-      sql_port: 32769
-      sql_username: "postgres"
-      sql_password: "password"
+      sql_host: "localhost"
+      sql_port: 5432
+      sql_username: "pubmed_ingester"
+      sql_password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
       sql_db: "pubmed"
 

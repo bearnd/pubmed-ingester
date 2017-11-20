@@ -24,7 +24,7 @@ test_requirements = [
 
 setup(
     name='pubmed_ingester',
-    version='0.2.0',
+    version='0.2.1',
     description="Pubmed XML dump parser and SQL ingester.",
     long_description=readme + '\n\n' + history,
     author="Adamos Kyriakou",

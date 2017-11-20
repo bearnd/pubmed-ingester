@@ -1,5 +1,10 @@
 ## Changelog
 
+### v0.2.1
+
+- Removed the obsolete alembic migration for the old initial schema.
+- Added a script to ingest a single Pubmed XML file.
+
 ### v0.2.0
 
 - Removed the service template from the Ansible role as it will not be used right now.

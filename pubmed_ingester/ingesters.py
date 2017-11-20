@@ -474,6 +474,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         names_last = []
         names_initials = []
         names_suffix = []
+        emails = []
         md5s = []
         for entry in documents:
             # Skip invalid author documents.
@@ -490,6 +491,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             author_obj.name_initials = data["Initials"]
             author_obj.name_initials = data["Initials"]
             author_obj.name_suffix = data["Suffix"]
+            author_obj.email = data["Email"]
 
             author_identifiers.append(author_obj.author_identifier)
             author_identifier_sources.append(
@@ -499,6 +501,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             names_last.append(author_obj.name_last)
             names_initials.append(author_obj.name_initials)
             names_suffix.append(author_obj.name_suffix)
+            emails.append(author_obj.email)
             md5s.append(author_obj.md5)
 
         author_obj_ids = self.dal.biodi_authors(
@@ -508,6 +511,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             names_last=names_last,
             names_initials=names_initials,
             names_suffix=names_suffix,
+            emails=emails,
             md5s=md5s,
         )
 

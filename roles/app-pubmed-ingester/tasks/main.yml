@@ -1,0 +1,142 @@
+---
+
+- name: Update apt cache.
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+  ignore_errors: true
+  become: true
+
+- name: Install PostgreSQL (Development).
+  include_role:
+    name: geerlingguy.postgresql
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+
+- name: Install apt dependencies.
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ app_pubmed_ingester.dependencies_apt }}"
+  become: true
+
+- name: Create service group.
+  group:
+    state: present
+    name: "{{ app_pubmed_ingester.group }}"
+  become: true
+
+- name: Create service user.
+  user:
+    state: present
+    name: "{{ app_pubmed_ingester.user }}"
+    createhome: yes
+    group: "{{ app_pubmed_ingester.group }}"
+    shell: "/bin/false"
+  become: true
+
+- name: Create application directories.
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0755
+  with_items:
+    - "{{ app_pubmed_ingester.share_dir }}"
+    - "{{ app_pubmed_ingester.config_dir }}"
+    - "{{ app_pubmed_ingester.run_dir }}"
+    - "{{ app_pubmed_ingester.log_dir }}"
+  become: true
+
+- name: Install system-level Python dependencies
+  pip:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ app_pubmed_ingester.dependencies_pip_system }}"
+  become: true
+
+- name: Install deployment-level pip dependencies not included in a `requirements.txt` within the virtual environment
+  pip:
+    name: "{{ item }}"
+    state: latest
+    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv_python: python3.5
+  with_items: "{{ app_pubmed_ingester.dependencies_pip_virtualenv }}"
+  become: true
+  become_user: "{{ app_pubmed_ingester.user }}"
+
+- name: Upload public deployment key (Production)
+  copy:
+    src: "deployment_key.public"
+    dest: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.public"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
+
+- name: Upload private deployment key (Production)
+  copy:
+    src: "deployment_key.private"
+    dest: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.private"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
+
+- name: Checkout the project source code from Git (Production)
+  git:
+    repo: "ssh://git@sunny.diskstation.me/bearnd/pubmed-ingester.git"
+    dest: "{{ app_pubmed_ingester.share_dir }}/src"
+    depth: 1
+    force: yes
+    accept_hostkey: true
+    ssh_opts: "-o StrictHostKeyChecking=no  -o Port=30001"
+    key_file: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.private"
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+  become: true
+
+- name: Create configuration file (Development)
+  template:
+    src: "config_dev.json.j2"
+    dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
+    owner: "{{ app_pubmed_ingester.user }}"
+    group: "{{ app_pubmed_ingester.group }}"
+    mode: 0600
+  become: true
+  become_user: "{{ app_pubmed_ingester.user }}"
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+
+- name: Create configuration file (Production)
+  template:
+    src: "config_prod.json.j2"
+    dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
+    owner: "{{ app_pubmed_ingester.user }}"
+    group: "{{ app_pubmed_ingester.group }}"
+    mode: 0600
+  become: true
+  become_user: "{{ app_pubmed_ingester.user }}"
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+
+- name: Install Python package requirements (Production)
+  pip:
+    chdir: "{{ app_pubmed_ingester.share_dir }}/src/"
+    requirements: requirements.txt
+    state: present
+    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv_python: python2.7
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+  become: true
+  become_user: "{{ app_pubmed_ingester.user }}"
+
+- name: Install Python package requirements (Development)
+  pip:
+    chdir: "/home/vagrant/pubmed-ingester"
+    requirements: requirements_dev.txt
+    state: present
+    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv_python: python2.7
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+  become: true
+  become_user: "{{ app_pubmed_ingester.user }}"
+
+- name: Create init script for the `pubmed-ingester` service (Production)
+  template: src=pubmed-parser.j2 dest=/etc/init/pubmed-ingester.conf
+  notify:
+    - restart pubmed-ingester
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+  become: true

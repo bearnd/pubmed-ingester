@@ -881,6 +881,13 @@ class Author(Base, OrmBase):
         nullable=True,
     )
 
+    # Author email (possibly extraction from the affiliation).
+    email = sqlalchemy.Column(
+        name="email",
+        type_=sqlalchemy.types.Unicode(),
+        nullable=True,
+    )
+
     # MD5 hash of the author's full name.
     md5 = sqlalchemy.Column(
         name="md5",
@@ -919,6 +926,7 @@ class Author(Base, OrmBase):
         "name_initials",
         "name_last",
         "name_suffix",
+        "email",
     )
     def update_md5(self, key, value):
 
@@ -928,6 +936,7 @@ class Author(Base, OrmBase):
         # Retrieve the full concatenated name.
         name = " ".join([
             str(self.author_identifier),
+            str(self.email),
             self.name_full(),
             str(value),
         ])

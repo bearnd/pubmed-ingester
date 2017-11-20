@@ -16,4 +16,4 @@ from . import pubmed_ingester
 
 __author__ = """Adamos Kyriakou"""
 __email__ = 'adam@bearnd.io'
-__version__ = '0.1.0'
+__version__ = '0.2.0'

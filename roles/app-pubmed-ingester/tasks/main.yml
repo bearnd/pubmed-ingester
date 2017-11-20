@@ -7,10 +7,9 @@
   ignore_errors: true
   become: true
 
-- name: Install PostgreSQL (Development).
+- name: Install PostgreSQL.
   include_role:
     name: geerlingguy.postgresql
-  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
 - name: Install apt dependencies.
   apt:
@@ -133,10 +132,3 @@
   when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
   become: true
   become_user: "{{ app_pubmed_ingester.user }}"
-
-- name: Create init script for the `pubmed-ingester` service (Production)
-  template: src=pubmed-parser.j2 dest=/etc/init/pubmed-ingester.conf
-  notify:
-    - restart pubmed-ingester
-  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
-  become: true

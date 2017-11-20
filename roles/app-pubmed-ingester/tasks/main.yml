@@ -101,15 +101,16 @@
   become_user: "{{ app_pubmed_ingester.user }}"
   when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
-- name: Create configuration file
+- name: Create configuration file (Production)
   template:
-    src: "config.json.j2"
+    src: "config_prod.json.j2"
     dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
     owner: "{{ app_pubmed_ingester.user }}"
     group: "{{ app_pubmed_ingester.group }}"
     mode: 0600
   become: true
   become_user: "{{ app_pubmed_ingester.user }}"
+  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
 
 - name: Install Python package requirements (Production)
   pip:
@@ -122,7 +123,7 @@
   become: true
   become_user: "{{ app_pubmed_ingester.user }}"
 
-- name: Install Python package requirements (Vagrant)
+- name: Install Python package requirements (Development)
   pip:
     chdir: "/home/vagrant/pubmed-ingester"
     requirements: requirements_dev.txt
@@ -133,7 +134,7 @@
   become: true
   become_user: "{{ app_pubmed_ingester.user }}"
 
-- name: Create init script for the `pubmed-ingester` service
+- name: Create init script for the `pubmed-ingester` service (Production)
   template: src=pubmed-parser.j2 dest=/etc/init/pubmed-ingester.conf
   notify:
     - restart pubmed-ingester

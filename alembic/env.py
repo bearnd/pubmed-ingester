@@ -6,16 +6,17 @@ import os
 import sys
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
 dir_current = os.path.split(os.path.abspath(__file__))[0]
 dir_parent = os.path.abspath(os.path.join(dir_current, os.pardir))
 sys.path.append(dir_parent)
 
-import pubmed_ingester
+from pubmed_ingester.config import import_config
+from pubmed_ingester.dal_base import DalBase
+from pubmed_ingester.orm_base import Base
 
-cfg = pubmed_ingester.config.import_config(
+cfg = import_config(
     fname_config_file="/etc/pubmed-ingester/pubmed-ingester.json"
 )
 
@@ -24,24 +25,25 @@ cfg = pubmed_ingester.config.import_config(
 # access to the values within the .ini file in use.
 config = context.config
 
-sql_url_template = ("postgresql+psycopg2://{username}:"
-                    "{password}@{host}:{port}/{db}")
-sql_url = sql_url_template.format(
-    username=cfg.sql_username,
-    password=cfg.sql_password,
-    host=cfg.sql_host,
-    port=cfg.sql_port,
-    db=cfg.sql_db,
+dal = DalBase(
+    sql_username=cfg.sql_username,
+    sql_password=cfg.sql_password,
+    sql_host=cfg.sql_host,
+    sql_port=cfg.sql_port,
+    sql_db=cfg.sql_db,
 )
 
-config.set_main_option(name="sqlalchemy.url", value=sql_url)
+config.set_main_option(
+    name="sqlalchemy.url",
+    value=dal.create_url()
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 
 # add your model's MetaData object here for 'autogenerate' support
-target_metadata = pubmed_ingester.orm_base.Base.metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -63,7 +65,10 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -76,12 +81,9 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+    engine = dal.engine
 
-    with connectable.connect() as connection:
+    with engine.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata

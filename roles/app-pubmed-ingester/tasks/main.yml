@@ -11,6 +11,16 @@
   include_role:
     name: geerlingguy.postgresql
 
+- name: Copy PostgreSQL configuration files.
+  copy:
+    src: "{{ item }}"
+    dest: "//etc/postgresql/9.5/main/{{ item }}"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
+  with_items:
+    - "pg_hba.conf"
+    - "postgresql.conf"
+
 - name: Install apt dependencies.
   apt:
     name: "{{ item }}"
@@ -31,6 +41,14 @@
     createhome: yes
     group: "{{ app_pubmed_ingester.group }}"
     shell: "/bin/false"
+  become: true
+
+- name: Create `.ssh` directory under user home.
+  file:
+    state: directory
+    path: "/home/pubmed_ingester/.ssh"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
   become: true
 
 - name: Create application directories.

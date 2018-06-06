@@ -10,6 +10,7 @@
 - name: Install PostgreSQL.
   include_role:
     name: geerlingguy.postgresql
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
 - name: Install apt dependencies.
   apt:
@@ -63,6 +64,7 @@
   with_items:
     - "pg_hba.conf"
     - "postgresql.conf"
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
 - name: Install system-level Python dependencies
   pip:

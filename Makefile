@@ -48,7 +48,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 
 test: ## run tests quickly with the default Python
-	py.test
+	python -m pytest tests
 
 
 coverage: ## check code coverage quickly with the default Python

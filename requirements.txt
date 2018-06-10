@@ -12,4 +12,5 @@ psycopg2==2.7.3.2
 SQLAlchemy==1.2.8
 chardet==3.0.4
 lxml==3.8.0
+alembic==0.9.9
 git+http://gitlab-ci-token:YGVQHuviVKnqbJ1SyAXd@sunny.diskstation.me:30000/bearnd/fightfor-orm.git#egg=fform

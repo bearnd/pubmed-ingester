@@ -2,17 +2,13 @@
 
 """Top-level package for pubmed-ingester."""
 
-from . import config
-from . import excs
-from . import ingesters
-from . import loggers
-from . import orm
-from . import orm_base
-from . import parser_utils
-from . import parsers
-from . import dal_base
-from . import dals
-from . import pubmed_ingester
+from pubmed_ingester import config
+from pubmed_ingester import excs
+from pubmed_ingester import ingesters
+from pubmed_ingester import loggers
+from pubmed_ingester import parser_utils
+from pubmed_ingester import parsers
+from pubmed_ingester import pubmed_ingester
 
 __author__ = """Adamos Kyriakou"""
 __email__ = 'adam@bearnd.io'

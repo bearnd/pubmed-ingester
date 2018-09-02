@@ -71,7 +71,7 @@ config:
     sql_db: "test"
 
     # Google Maps API Settings.
-    google_maps_api_key: "AIzaSyDp0jjlnAGDCQXNqj075yaUv15t10AsZic"
+    google_maps_api_key: "AIzaSyCQJz1_ZeqTHCQiIJ5lv-8tslPHY2yLB0I"
 
     # Gunicorn Configuration Settings.
     gunicorn:
@@ -92,7 +92,7 @@ config:
     sql_db: "fightfor"
 
     # Google Maps API Settings.
-    google_maps_api_key: "AIzaSyDp0jjlnAGDCQXNqj075yaUv15t10AsZic"
+    google_maps_api_key: "AIzaSyCQJz1_ZeqTHCQiIJ5lv-8tslPHY2yLB0I"
 
     # Gunicorn Configuration Settings.
     gunicorn:
@@ -113,7 +113,7 @@ config:
     sql_db: "fightfor"
 
     # Google Maps API Settings.
-    google_maps_api_key: "AIzaSyDp0jjlnAGDCQXNqj075yaUv15t10AsZic"
+    google_maps_api_key: "AIzaSyCQJz1_ZeqTHCQiIJ5lv-8tslPHY2yLB0I"
 
     # Gunicorn Configuration Settings.
     gunicorn:

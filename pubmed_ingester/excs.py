@@ -24,3 +24,10 @@ class InvalidArguments(Exception):
     invalid."""
     def __init__(self, message, *args):
         super(InvalidArguments, self).__init__(message, *args)
+
+
+class GooglePlacesApiQueryLimitError(Exception):
+    """Exception raised when the query limit in the Google Places API has been
+    reached."""
+    def __init__(self, message, *args):
+        super(GooglePlacesApiQueryLimitError, self).__init__(message, *args)

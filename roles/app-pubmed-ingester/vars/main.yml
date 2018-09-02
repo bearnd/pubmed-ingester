@@ -1,73 +1,123 @@
 ---
 
+# PostgreSQL variables
+
 # Define the encrypted SQL password variable outside the nested structures due
 # to the issue described in https://stackoverflow
 # .com/questions/50770524/ansible-vault-inline-variable-with-to-nice-json
 # -unexpected-templating-type-erro
 sql_password: !vault |
-    $ANSIBLE_VAULT;1.1;AES256
-    33636230323837303735643261366633663631316134396634666335613630393239363065333062
-    3330336465663862393832303662326231316264303232380a643634626632623331366535616462
-    31343831663636383161316333306335306262643530386139646436663137653437666265626338
-    3135336330346537350a663530373865623633373936333533376334303339326163616662663234
-    64623736613465656435636233663639373133383061343739383862653631653563323137386463
-    3536356264643264623166373763356461663865313639393262
+          $ANSIBLE_VAULT;1.1;AES256
+          37666261656265663839363630366562653030373038386262363861663338323134663839653266
+          3733643431366263633633383539383963646363666366330a666162613833343834623633326261
+          38646663613831646164626162613666656232343562633561663835336232623165333331633837
+          3135363439373432380a613735636361336331393331613633366565663763396566643061393932
+          36623464303835343737323236623739343337316131376531663837653064396534333961316538
+          3963656134343530663136366566303833396231306130366136
 
 # PostgreSQL Server Settings.
 postgresql_python_library: "python-psycopg2"
 
 # PostgreSQL Server Databases.
 postgresql_databases:
-  - name: "pubmed"
+  - name: "fightfor"
     port: 5432
   - name: "test"
     port: 5432
-# PostgreSQL Server Users.
+
+# PostgreSQL Users.
 postgresql_users:
-  - name: "pubmed_ingester"
+  - name: "{{ system.user }}"
     password: "{{ sql_password }}"
     port: 5432
 
-app_pubmed_ingester:
+# PostgreSQL schemata.
+postgresql_schemata:
+  - pubmed
 
-  # Application user settings.
-  user: pubmed_ingester
-  group: pubmed_ingester
+# PostgreSQL extensions.
+postgresql_extensions:
+  - pg_trgm
+  - postgis
 
+
+project:
+  name: "pubmed-ingester"
+
+system:
+  # User name.
+  user: "pubmed_ingester"
+  # User group.
+  group: "pubmed_ingester"
   # Application directories.
-  config_dir: /etc/pubmed-ingester
-  share_dir: /usr/local/share/pubmed-ingester
-  run_dir: /var/run/pubmed-ingester
-  log_dir: /var/log/pubmed-ingester
-  virtual_env_dir: /usr/local/share/pubmed-ingester/venvs/pubmed-ingester
+  directories:
+    config: "/etc/{{ project.name }}"
+    share: "/usr/local/share/{{ project.name }}"
+    run: "/var/run/{{ project.name }}"
+    log: "/var/log/{{ project.name }}"
+    virtual_env: "/usr/local/share/{{ project.name }}/venvs/{{ project.name }}"
 
-  # Gunicorn Configuration Settings.
-  gunicorn:
-    host: "127.0.0.1"
-    port: 5555
-    workers: 4
-    worker_class: sync
+# Application Configuration Settings.
+config:
+  test:
+    # General Settings.
+    logger_level: DEBUG
 
-  # Application Configuration Settings.
-  config:
+    # PostgreSQL Server Configuration Settings.
+    sql_host: "localhost"
+    sql_port: 5432
+    sql_username: "{{ system.user }}"
+    sql_password: "{{ sql_password }}"
+    sql_db: "test"
 
-    dev:
-      # General Settings.
-      logger_level: DEBUG
+    # Google Maps API Settings.
+    google_maps_api_key: "AIzaSyDp0jjlnAGDCQXNqj075yaUv15t10AsZic"
 
-      # PostgreSQL Server Configuration Settings.
-      sql_host: "localhost"
-      sql_port: 5432
-      sql_username: "pubmed_ingester"
-      sql_password: "{{ sql_password }}"
-      sql_db: "pubmed"
-    prod:
-      # General Settings.
-      logger_level: INFO
+    # Gunicorn Configuration Settings.
+    gunicorn:
+      host: "127.0.0.1"
+      port: 5555
+      workers: 1
+      worker_class: sync
 
-      # PostgreSQL Server Configuration Settings.
-      sql_host: "localhost"
-      sql_port: 5432
-      sql_username: "pubmed_ingester"
-      sql_password: "{{ sql_password }}"
-      sql_db: "pubmed"
+  dev:
+    # General Settings.
+    logger_level: DEBUG
+
+    # PostgreSQL Server Configuration Settings.
+    sql_host: "localhost"
+    sql_port: 5432
+    sql_username: "{{ system.user }}"
+    sql_password: "{{ sql_password }}"
+    sql_db: "fightfor"
+
+    # Google Maps API Settings.
+    google_maps_api_key: "AIzaSyDp0jjlnAGDCQXNqj075yaUv15t10AsZic"
+
+    # Gunicorn Configuration Settings.
+    gunicorn:
+      host: "127.0.0.1"
+      port: 5555
+      workers: 1
+      worker_class: sync
+
+  prod:
+    # General Settings.
+    logger_level: INFO
+
+    # PostgreSQL Server Configuration Settings.
+    sql_host: "localhost"
+    sql_port: 5432
+    sql_username: "{{ system.user }}"
+    sql_password: "{{ sql_password }}"
+    sql_db: "fightfor"
+
+    # Google Maps API Settings.
+    google_maps_api_key: "AIzaSyDp0jjlnAGDCQXNqj075yaUv15t10AsZic"
+
+    # Gunicorn Configuration Settings.
+    gunicorn:
+      host: "127.0.0.1"
+      port: 5555
+      workers: 4
+      worker_class: sync

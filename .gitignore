@@ -63,3 +63,6 @@ target/
 
 # Ansible .retry files.
 *.retry
+/.ansible-vault-password
+/.idea
+/.vagrant

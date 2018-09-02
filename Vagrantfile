@@ -32,13 +32,13 @@ Vagrant.configure("2") do |config|
     # provision with Ansible
     config.vm.provision :ansible do |ansible|
         ansible.playbook = "app-pubmed-ingester.yaml"
-
+        ansible.vault_password_file = ".ansible-vault-password"
         if ENV['ANSIBLE_TAGS'] != ""
             ansible.tags = ENV['ANSIBLE_TAGS']
         end
 
         ansible.extra_vars = {
-            "app_pubmed_ingester"=> {is_vagrant: true},
+            is_vagrant: true,
         }
     end
 end

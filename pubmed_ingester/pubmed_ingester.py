@@ -5,11 +5,11 @@
 
 import os
 import argparse
-import fileinput
+
+from fform.dals_pubmed import DalPubmed
 
 from pubmed_ingester.ingesters import IngesterDocumentPubmedArticle
 from pubmed_ingester.parsers import ParserXmlPubmedArticle
-from pubmed_ingester.dals import DalPubmed
 from pubmed_ingester.config import import_config
 
 

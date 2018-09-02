@@ -1,5 +1,12 @@
 ## Changelog
 
+### v0.3.0
+
+- Refactored Ansible role to match the roles used in other projects, i.e., using Ansible Vault, provisioning PostgreSQL schemata and extensions.
+- Ported code to work with `fightfor-orm` instead of defining its own ORM and Alembic revision system.
+- Added basic unit-tests.
+- Added code to retrieve and populate canonical affiliations.
+
 ### v0.2.1
 
 - Removed the obsolete alembic migration for the old initial schema.

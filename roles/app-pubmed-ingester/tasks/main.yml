@@ -10,6 +10,7 @@
 - name: Install PostgreSQL.
   include_role:
     name: geerlingguy.postgresql
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
 - name: Install apt dependencies.
   apt:
@@ -33,6 +34,14 @@
     shell: "/bin/false"
   become: true
 
+- name: Create `.ssh` directory under user home.
+  file:
+    state: directory
+    path: "/home/pubmed_ingester/.ssh"
+    owner: "{{ app_pubmed_ingester.user }}"
+    mode: 0600
+  become: true
+
 - name: Create application directories.
   file:
     state: directory
@@ -45,6 +54,17 @@
     - "{{ app_pubmed_ingester.run_dir }}"
     - "{{ app_pubmed_ingester.log_dir }}"
   become: true
+
+- name: Copy PostgreSQL configuration files.
+  copy:
+    src: "{{ item }}"
+    dest: "//etc/postgresql/9.5/main/{{ item }}"
+    owner: "postgres"
+    mode: 0600
+  with_items:
+    - "pg_hba.conf"
+    - "postgresql.conf"
+  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
 
 - name: Install system-level Python dependencies
   pip:
@@ -115,7 +135,7 @@
   pip:
     chdir: "{{ app_pubmed_ingester.share_dir }}/src/"
     requirements: requirements.txt
-    state: present
+    state: latest
     virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
     virtualenv_python: python2.7
   when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
@@ -126,7 +146,7 @@
   pip:
     chdir: "/home/vagrant/pubmed-ingester"
     requirements: requirements_dev.txt
-    state: present
+    state: latest
     virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
     virtualenv_python: python2.7
   when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True

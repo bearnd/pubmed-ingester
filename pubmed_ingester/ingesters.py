@@ -4,20 +4,20 @@ import abc
 from typing import List, Dict
 
 from pubmed_ingester.loggers import create_logger
-from pubmed_ingester.dals import DalPubmed
-from pubmed_ingester.orm import Author
-from pubmed_ingester.orm import ArticleIdentifierType
-from pubmed_ingester.orm import AbstractText
-from pubmed_ingester.orm import AbstractTextCategory
-from pubmed_ingester.orm import Affiliation
-from pubmed_ingester.orm import ArticlePubModel
-from pubmed_ingester.orm import Keyword
-from pubmed_ingester.orm import Journal
-from pubmed_ingester.orm import JournalIssnType
-from pubmed_ingester.orm import Article
-from pubmed_ingester.orm import Databank
-from pubmed_ingester.orm import AccessionNumber
-from pubmed_ingester.orm import Grant
+from fform.dals_pubmed import DalPubmed
+from fform.orm_pubmed import Author
+from fform.orm_pubmed import ArticleIdentifierType
+from fform.orm_pubmed import AbstractText
+from fform.orm_pubmed import AbstractTextCategory
+from fform.orm_pubmed import Affiliation
+from fform.orm_pubmed import ArticlePubModel
+from fform.orm_pubmed import Keyword
+from fform.orm_pubmed import Journal
+from fform.orm_pubmed import JournalIssnType
+from fform.orm_pubmed import Article
+from fform.orm_pubmed import Databank
+from fform.orm_pubmed import AccessionNumber
+from fform.orm_pubmed import Grant
 from pubmed_ingester.utils import log_ingestion_of_document
 from pubmed_ingester.utils import log_ingestion_of_documents
 

@@ -1,5 +1,18 @@
 ---
 
+# Define the encrypted SQL password variable outside the nested structures due
+# to the issue described in https://stackoverflow
+# .com/questions/50770524/ansible-vault-inline-variable-with-to-nice-json
+# -unexpected-templating-type-erro
+sql_password: !vault |
+    $ANSIBLE_VAULT;1.1;AES256
+    33636230323837303735643261366633663631316134396634666335613630393239363065333062
+    3330336465663862393832303662326231316264303232380a643634626632623331366535616462
+    31343831663636383161316333306335306262643530386139646436663137653437666265626338
+    3135336330346537350a663530373865623633373936333533376334303339326163616662663234
+    64623736613465656435636233663639373133383061343739383862653631653563323137386463
+    3536356264643264623166373763356461663865313639393262
+
 # PostgreSQL Server Settings.
 postgresql_python_library: "python-psycopg2"
 
@@ -12,7 +25,7 @@ postgresql_databases:
 # PostgreSQL Server Users.
 postgresql_users:
   - name: "pubmed_ingester"
-    password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
+    password: "{{ sql_password }}"
     port: 5432
 
 app_pubmed_ingester:
@@ -46,7 +59,7 @@ app_pubmed_ingester:
       sql_host: "localhost"
       sql_port: 5432
       sql_username: "pubmed_ingester"
-      sql_password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
+      sql_password: "{{ sql_password }}"
       sql_db: "pubmed"
     prod:
       # General Settings.
@@ -56,6 +69,5 @@ app_pubmed_ingester:
       sql_host: "localhost"
       sql_port: 5432
       sql_username: "pubmed_ingester"
-      sql_password: "zI7indC309irKG8S76BQnGScKo0fDpdPC84rroMA"
+      sql_password: "{{ sql_password }}"
       sql_db: "pubmed"
-

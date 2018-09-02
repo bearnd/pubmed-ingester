@@ -7,52 +7,86 @@
   ignore_errors: true
   become: true
 
-- name: Install PostgreSQL.
-  include_role:
-    name: geerlingguy.postgresql
-  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
-
 - name: Install apt dependencies.
   apt:
     name: "{{ item }}"
     state: latest
-  with_items: "{{ app_pubmed_ingester.dependencies_apt }}"
+  with_items: "{{ dependencies.apt }}"
   become: true
+
+- name: Install PostgreSQL.
+  include_role:
+    name: geerlingguy.postgresql
+  ignore_errors: true
+  when: is_vagrant is defined and is_vagrant == True
+
+- name: Create schemata in the `fightfor` database under PostgreSQL.
+  postgresql_schema:
+    database: "fightfor"
+    name: "{{ item }}"
+    owner: "{{ system.user }}"
+    state: present
+  with_items: "{{ postgresql_schemata }}"
+  become: true
+  become_user: postgres
+  when: is_vagrant is defined and is_vagrant == True
+
+- name: Create schemata in the `test` database under PostgreSQL.
+  postgresql_schema:
+    database: "test"
+    name: "{{ item }}"
+    owner: "{{ system.user }}"
+    state: present
+  with_items: "{{ postgresql_schemata }}"
+  become: true
+  become_user: postgres
+  when: is_vagrant is defined and is_vagrant == True
+
+- name: Install extensions in the `fightfor` database under PostgreSQL.
+  postgresql_ext:
+    db: "fightfor"
+    name: "{{ item }}"
+  with_items: "{{ postgresql_extensions }}"
+  become: true
+  become_user: postgres
+  when: is_vagrant is defined and is_vagrant == True
+
+- name: Install extensions in the `test` database under PostgreSQL.
+  postgresql_ext:
+    db: "test"
+    name: "{{ item }}"
+  with_items: "{{ postgresql_extensions }}"
+  become: true
+  become_user: postgres
+  when: is_vagrant is defined and is_vagrant == True
 
 - name: Create service group.
   group:
     state: present
-    name: "{{ app_pubmed_ingester.group }}"
+    name: "{{ system.group }}"
   become: true
 
 - name: Create service user.
   user:
     state: present
-    name: "{{ app_pubmed_ingester.user }}"
+    name: "{{ system.user }}"
     createhome: yes
-    group: "{{ app_pubmed_ingester.group }}"
+    group: "{{ system.group }}"
     shell: "/bin/false"
-  become: true
-
-- name: Create `.ssh` directory under user home.
-  file:
-    state: directory
-    path: "/home/pubmed_ingester/.ssh"
-    owner: "{{ app_pubmed_ingester.user }}"
-    mode: 0600
   become: true
 
 - name: Create application directories.
   file:
     state: directory
     path: "{{ item }}"
-    owner: "{{ app_pubmed_ingester.user }}"
+    owner: "{{ system.user }}"
     mode: 0755
   with_items:
-    - "{{ app_pubmed_ingester.share_dir }}"
-    - "{{ app_pubmed_ingester.config_dir }}"
-    - "{{ app_pubmed_ingester.run_dir }}"
-    - "{{ app_pubmed_ingester.log_dir }}"
+    - "{{ system.directories.config }}"
+    - "{{ system.directories.share }}"
+    - "{{ system.directories.run }}"
+    - "{{ system.directories.log }}"
+    - "{{ system.directories.virtual_env }}"
   become: true
 
 - name: Copy PostgreSQL configuration files.
@@ -64,91 +98,105 @@
   with_items:
     - "pg_hba.conf"
     - "postgresql.conf"
-  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+  when: is_vagrant is defined and is_vagrant == True
 
 - name: Install system-level Python dependencies
   pip:
     name: "{{ item }}"
     state: latest
-  with_items: "{{ app_pubmed_ingester.dependencies_pip_system }}"
+  with_items: "{{ dependencies.pip.system }}"
   become: true
 
-- name: Install deployment-level pip dependencies not included in a `requirements.txt` within the virtual environment
+- name: Install deployment-level pip dependencies not included in a
+        `requirements.txt` within the virtual environment
   pip:
     name: "{{ item }}"
     state: latest
-    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
+    virtualenv: "{{ system.directories.virtual_env }}"
     virtualenv_python: python3.5
-  with_items: "{{ app_pubmed_ingester.dependencies_pip_virtualenv }}"
+  with_items: "{{ dependencies.pip.virtualenv }}"
   become: true
-  become_user: "{{ app_pubmed_ingester.user }}"
+  become_user: "{{ system.user }}"
 
 - name: Upload public deployment key (Production)
   copy:
     src: "deployment_key.public"
-    dest: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.public"
-    owner: "{{ app_pubmed_ingester.user }}"
+    dest: "/home/{{ system.user }}/.ssh/deployment_key.public"
+    owner: "{{ system.user }}"
     mode: 0600
+  when: is_vagrant is not defined or is_vagrant == False
 
 - name: Upload private deployment key (Production)
   copy:
     src: "deployment_key.private"
-    dest: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.private"
-    owner: "{{ app_pubmed_ingester.user }}"
+    dest: "/home/{{ system.user }}/.ssh/deployment_key.private"
+    owner: "{{ system.user }}"
     mode: 0600
+  when: is_vagrant is not defined or is_vagrant == False
 
 - name: Checkout the project source code from Git (Production)
   git:
     repo: "ssh://git@sunny.diskstation.me/bearnd/pubmed-ingester.git"
-    dest: "{{ app_pubmed_ingester.share_dir }}/src"
+    dest: "{{ system.directories.share }}/src"
     depth: 1
     force: yes
     accept_hostkey: true
     ssh_opts: "-o StrictHostKeyChecking=no  -o Port=30001"
-    key_file: "/home/{{ app_pubmed_ingester.user }}/.ssh/deployment_key.private"
-  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+    key_file: "/home/{{ system.user }}/.ssh/deployment_key.private"
+  when: is_vagrant is not defined or is_vagrant == False
   become: true
 
-- name: Create configuration file (Development)
+- name: Create `test` configuration file (Vagrant).
+  template:
+    src: "config_test.json.j2"
+    dest: "{{ system.directories.config }}/{{ project.name }}-test.json"
+    owner: "{{ system.user }}"
+    group: "{{ system.group }}"
+    mode: 0600
+  become: true
+  become_user: "{{ system.user }}"
+  when: is_vagrant is defined and is_vagrant == True
+
+- name: Create `dev` configuration file (Vagrant).
   template:
     src: "config_dev.json.j2"
-    dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
-    owner: "{{ app_pubmed_ingester.user }}"
-    group: "{{ app_pubmed_ingester.group }}"
+    dest: "{{ system.directories.config }}/{{ project.name }}-dev.json"
+    owner: "{{ system.user }}"
+    group: "{{ system.group }}"
     mode: 0600
   become: true
-  become_user: "{{ app_pubmed_ingester.user }}"
-  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+  become_user: "{{ system.user }}"
+  when: is_vagrant is defined and is_vagrant == True
 
-- name: Create configuration file (Production)
+- name: Create `prod` configuration file (Vagrant).
   template:
     src: "config_prod.json.j2"
-    dest: "{{ app_pubmed_ingester.config_dir }}/pubmed-ingester.json"
-    owner: "{{ app_pubmed_ingester.user }}"
-    group: "{{ app_pubmed_ingester.group }}"
+    dest: "{{ system.directories.config }}/{{ project.name }}-prod.json"
+    owner: "{{ system.user }}"
+    group: "{{ system.group }}"
     mode: 0600
   become: true
-  become_user: "{{ app_pubmed_ingester.user }}"
-  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
+  become_user: "{{ system.user }}"
+  when: is_vagrant is not defined or is_vagrant == False
 
-- name: Install Python package requirements (Production)
+- name: Install development-only Python package requirements (Vagrant).
   pip:
-    chdir: "{{ app_pubmed_ingester.share_dir }}/src/"
-    requirements: requirements.txt
-    state: latest
-    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
-    virtualenv_python: python2.7
-  when: app_pubmed_ingester.is_vagrant is not defined or app_pubmed_ingester.is_vagrant == False
-  become: true
-  become_user: "{{ app_pubmed_ingester.user }}"
-
-- name: Install Python package requirements (Development)
-  pip:
-    chdir: "/home/vagrant/pubmed-ingester"
+    chdir: "/home/vagrant/{{ project.name }}"
     requirements: requirements_dev.txt
     state: latest
-    virtualenv: "{{ app_pubmed_ingester.virtual_env_dir }}"
-    virtualenv_python: python2.7
-  when: app_pubmed_ingester.is_vagrant is defined and app_pubmed_ingester.is_vagrant == True
+    virtualenv: "{{ system.directories.virtual_env }}"
+    virtualenv_python: python3.5
+  when: is_vagrant is defined and is_vagrant == True
   become: true
-  become_user: "{{ app_pubmed_ingester.user }}"
+  become_user: "{{ system.user }}"
+
+- name: Install Python package requirements (Production).
+  pip:
+    chdir: "{{ system.directories.share }}/src"
+    requirements: requirements.txt
+    state: latest
+    virtualenv: "{{ system.directories.virtual_env }}"
+    virtualenv_python: python3.5
+  become: true
+  become_user: "{{ system.user }}"
+  when: is_vagrant is not defined or is_vagrant == False

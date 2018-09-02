@@ -11,7 +11,7 @@ from fform.orm_pubmed import AbstractText
 from fform.orm_pubmed import AbstractTextCategory
 from fform.orm_pubmed import Affiliation
 from fform.orm_pubmed import ArticlePubModel
-from fform.orm_pubmed import Keyword
+from fform.orm_pubmed import PmKeyword
 from fform.orm_pubmed import Journal
 from fform.orm_pubmed import JournalIssnType
 from fform.orm_pubmed import Article
@@ -317,7 +317,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         for document in documents:
 
-            keyword = Keyword()
+            keyword = PmKeyword()
             keyword.keyword = document["Keyword"]["Keyword"]
 
             keywords.append(keyword.keyword)

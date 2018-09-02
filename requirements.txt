@@ -13,3 +13,6 @@ SQLAlchemy==1.2.8
 chardet==3.0.4
 lxml==3.8.0
 git+http://gitlab-ci-token:YGVQHuviVKnqbJ1SyAXd@sunny.diskstation.me:30000/bearnd/fightfor-orm.git#egg=fform
+requests==2.19.1
+GeoAlchemy2==0.4.2
+Shapely==1.6.4

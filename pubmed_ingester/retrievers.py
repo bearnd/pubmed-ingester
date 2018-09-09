@@ -195,3 +195,36 @@ def find_affiliation_google_place(
     return None
 
 
+def get_place_details(
+    google_place_id: str,
+    retriever: RetrieverGoogleMaps,
+):
+
+    msg = "Retrieving place-details for Google Place ID '{}'."
+    msg_fmt = msg.format(google_place_id)
+    logger.info(msg_fmt)
+
+    # Perform the request against the Google Places API.
+    response = retriever.get_place_details(google_place_id=google_place_id)
+
+    if not response:
+        return None
+
+    # If the response has a `ZERO_RESULTS` status then repeat the request
+    # gradually decreasing granularity.
+    if response["status"] == "ZERO_RESULTS":
+        msg_fmt = "No results found for query '{}'.".format(google_place_id)
+        logger.debug(msg_fmt)
+        return None
+    # If the response has a `OVER_QUERY_LIMIT` status then throw the
+    # corresponding exception.
+    elif response["status"] == "OVER_QUERY_LIMIT":
+        msg_fmt = "Query limit exceeded."
+        raise GooglePlacesApiQueryLimitError(msg_fmt)
+    # If the request succeeded and a place was found then return the
+    # response.
+    elif response["status"] == "OK":
+        msg = "Results '{}' found for Google Place ID '{}'."
+        msg_fmt = msg.format(response, google_place_id)
+        logger.info(msg_fmt)
+        return response

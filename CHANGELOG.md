@@ -1,5 +1,11 @@
 ## Changelog
 
+### v0.4.0
+
+- Moved the `find_affiliation_google_place` function to the `utils.py` module.
+- Added a new `get_place_details` function to the `retrievers.py` module.
+- Added a new script to populate the canonical affiliation details.
+
 ### v0.3.0
 
 - Refactored Ansible role to match the roles used in other projects, i.e., using Ansible Vault, provisioning PostgreSQL schemata and extensions.

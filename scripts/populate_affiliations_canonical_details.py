@@ -247,8 +247,4 @@ if __name__ == '__main__':
 
     retriever = RetrieverGoogleMaps(api_key=api_keys[1])
 
-    while True:
-        try:
-            populate()
-        except:
-            pass
+    populate()

@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.5.0
+
+- Added a script to copy canonical affiliation IDs to the `article_author_affiliations` table.
+
 ### v0.4.0
 
 - Moved the `find_affiliation_google_place` function to the `utils.py` module.

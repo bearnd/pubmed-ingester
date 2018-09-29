@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.5.1
+
+- Updated the `IngesterDocumentPubmedArticle` class to convert enumeration values to their PostgreSQL-compatible format prior to retrieving the enum member.
+
 ### v0.5.0
 
 - Added a script to copy canonical affiliation IDs to the `article_author_affiliations` table.

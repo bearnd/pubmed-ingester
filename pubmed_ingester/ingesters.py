@@ -52,6 +52,25 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             kwargs=kwargs
         )
 
+    @staticmethod
+    def _convert_enum_value(value: str):
+        """Converts enumeration values to a form compatible with PostgreSQL by
+        converting them to lowercase and replacing dashes with underscores.
+
+        Args:
+            value (str): The enumeration value to be converted.
+
+        Returns:
+            str: The converted value.
+        """
+
+        if value:
+            value = value.replace("-", "_").lower()
+        else:
+            value = None
+
+        return value
+
     @log_ingestion_of_documents(document_name="Chemical")
     def ingest_chemicals(
         self,
@@ -99,7 +118,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         journal_obj = Journal()
         journal_obj.issn = document["ISSN"]["ISSN"]
         journal_obj.issn_type = JournalIssnType.get_enum(
-            value=document["ISSN"]["IssnType"]
+            value=self._convert_enum_value(document["ISSN"]["IssnType"]),
         )
         journal_obj.title = document["Title"]
         journal_obj.abbreviation = document["ISOAbbreviation"]
@@ -135,7 +154,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             abstract_text = AbstractText()
             abstract_text.label = data["Label"]
             abstract_text.category = AbstractTextCategory.get_enum(
-                value=data["NlmCategory"]
+                value=self._convert_enum_value(data["NlmCategory"]),
             )
             abstract_text.text = data["AbstractText"]
 
@@ -167,7 +186,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             data = entry["ArticleId"]
 
             identifier_types.append(ArticleIdentifierType.get_enum(
-                value=data["IdType"]
+                value=self._convert_enum_value(data["IdType"]),
             ))
             identifiers.append(data["ArticleId"])
 
@@ -240,7 +259,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         article_obj.publication_day = publication_day
         article_obj.date_published = date_published
         article_obj.publication_model = ArticlePubModel.get_enum(
-                value=document["PubModel"]
+            value=self._convert_enum_value(document["PubModel"]),
         )
         article_obj.journal_id = journal_id
         article_obj.journal_volume = doc_journal_issue.get("Volume")

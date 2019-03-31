@@ -117,7 +117,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         journal_obj = Journal()
         journal_obj.issn = document["ISSN"]["ISSN"]
-        journal_obj.issn_type = JournalIssnType.get_enum(
+        journal_obj.issn_type = JournalIssnType.get_member(
             value=self._convert_enum_value(document["ISSN"]["IssnType"]),
         )
         journal_obj.title = document["Title"]
@@ -153,7 +153,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
             abstract_text = AbstractText()
             abstract_text.label = data["Label"]
-            abstract_text.category = AbstractTextCategory.get_enum(
+            abstract_text.category = AbstractTextCategory.get_member(
                 value=self._convert_enum_value(data["NlmCategory"]),
             )
             abstract_text.text = data["AbstractText"]
@@ -185,7 +185,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         for entry in documents:
             data = entry["ArticleId"]
 
-            identifier_types.append(ArticleIdentifierType.get_enum(
+            identifier_types.append(ArticleIdentifierType.get_member(
                 value=self._convert_enum_value(data["IdType"]),
             ))
             identifiers.append(data["ArticleId"])
@@ -258,7 +258,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         article_obj.publication_month = publication_month
         article_obj.publication_day = publication_day
         article_obj.date_published = date_published
-        article_obj.publication_model = ArticlePubModel.get_enum(
+        article_obj.publication_model = ArticlePubModel.get_member(
             value=self._convert_enum_value(document["PubModel"]),
         )
         article_obj.journal_id = journal_id

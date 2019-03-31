@@ -285,41 +285,41 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         return article_id
 
-    @log_ingestion_of_documents(document_name="Descriptor")
-    def ingest_descriptors(
+    def retrieve_descriptors(
         self,
         documents: List[Dict]
     ) -> List[int]:
 
-        uids = []
-        descriptors = []
+        descriptor_obj_ids = []
         for document in documents:
-            uids.append(document["UI"])
-            descriptors.append(document["DescriptorName"])
+            ui = document["UI"]
+            descriptor = self.dal.get_by_attr(
+                orm_class=Descriptor,
+                attr_name="ui",
+                attr_value=ui,
+            )  # type: Descriptor
 
-        descriptor_obj_ids = self.dal.biodi_descriptors(
-            uids=uids,
-            descriptors=descriptors
-        )
+            if descriptor:
+                descriptor_obj_ids.append(descriptor.descriptor_id)
 
         return descriptor_obj_ids
 
-    @log_ingestion_of_documents(document_name="Qualifier")
-    def ingest_qualifiers(
+    def retrieve_qualifiers(
         self,
         documents: List[Dict]
     ) -> List[int]:
 
-        uids = []
-        qualifiers = []
+        qualifier_obj_ids = []
         for document in documents:
-            uids.append(document["QualifierName"]["UI"])
-            qualifiers.append(document["QualifierName"]["QualifierName"])
+            ui = document["QualifierName"]["UI"]
+            qualifier = self.dal.get_by_attr(
+                orm_class=Qualifier,
+                attr_name="ui",
+                attr_value=ui,
+            )  # type: Qualifier
 
-        qualifier_obj_ids = self.dal.biodi_qualifiers(
-            uids=uids,
-            qualifiers=qualifiers
-        )
+            if qualifier:
+                qualifier_obj_ids.append(qualifier.qualifier_id)
 
         return qualifier_obj_ids
 
@@ -374,6 +374,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         citation_id: int,
         documents: List[Dict]
     ):
+
         documents_descriptors = []
         documents_qualifiers = []
         for document in documents:
@@ -384,12 +385,15 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             for document_qualifier in data["QualifierNames"]:
                 documents_qualifiers.append(document_qualifier)
 
-        _descriptor_ids = self.ingest_descriptors(
+        _descriptor_ids = self.retrieve_descriptors(
             documents=documents_descriptors
         )
 
+        if not _descriptor_ids:
+            return None
+
         if documents_qualifiers:
-            _qualifier_ids = self.ingest_qualifiers(
+            _qualifier_ids = self.retrieve_qualifiers(
                 documents=documents_qualifiers
             )
         else:
@@ -401,6 +405,10 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         are_qualifiers_major = []
         idx_qualifier = 0
         for idx_descriptor, document in enumerate(documents):
+
+            if not _descriptor_ids[idx_descriptor]:
+                continue
+
             data = document["MeshHeading"]
             document_descriptor = data.get("DescriptorName")
 

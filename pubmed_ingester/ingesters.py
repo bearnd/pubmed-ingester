@@ -18,6 +18,8 @@ from fform.orm_pubmed import Article
 from fform.orm_pubmed import Databank
 from fform.orm_pubmed import AccessionNumber
 from fform.orm_pubmed import Grant
+from fform.orm_mt import Descriptor
+from fform.orm_mt import Qualifier
 from pubmed_ingester.utils import log_ingestion_of_document
 from pubmed_ingester.utils import log_ingestion_of_documents
 
@@ -71,28 +73,24 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         return value
 
-    @log_ingestion_of_documents(document_name="Chemical")
-    def ingest_chemicals(
+    def retrieve_chemicals(
         self,
         documents: List[Dict]
     ) -> List[int]:
 
-        nums_registries = []
-        uids = []
-        chemicals = []
-        for entry in documents:
-            data = entry["Chemical"]
-            nums_registries.append(data["RegistryNumber"])
-            uids.append(data["NameOfSubstance"]["UI"])
-            chemicals.append(data["NameOfSubstance"]["NameOfSubstance"])
+        descriptor_obj_ids = []
+        for document in documents:
+            ui = document["Chemical"]["NameOfSubstance"]["UI"]
+            descriptor = self.dal.get_by_attr(
+                orm_class=Descriptor,
+                attr_name="ui",
+                attr_value=ui,
+            )  # type: Descriptor
 
-        chemical_obj_ids = self.dal.biodi_chemicals(
-            nums_registries=nums_registries,
-            uids=uids,
-            chemicals=chemicals
-        )
+            if descriptor:
+                descriptor_obj_ids.append(descriptor.descriptor_id)
 
-        return chemical_obj_ids
+        return descriptor_obj_ids
 
     @log_ingestion_of_document(document_name="JournalInfo")
     def ingest_journal_info(
@@ -745,12 +743,13 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         # Ingest `Chemical` documents.
         if chemical_documents:
-            chemical_ids = self.ingest_chemicals(documents=chemical_documents)
+            chemical_ids = self.retrieve_chemicals(documents=chemical_documents)
 
-            self.dal.biodi_citation_chemicals(
-                citation_id=citation_id,
-                chemical_ids=chemical_ids
-            )
+            if chemical_ids:
+                self.dal.biodi_citation_chemicals(
+                    citation_id=citation_id,
+                    chemical_ids=chemical_ids
+                )
 
         # Ingest `Author` documents.
         if author_documents:

@@ -33,7 +33,10 @@ postgresql_users:
 
 # PostgreSQL schemata.
 postgresql_schemata:
+  - clinicaltrials
   - pubmed
+  - mesh
+  - app
 
 # PostgreSQL extensions.
 postgresql_extensions:

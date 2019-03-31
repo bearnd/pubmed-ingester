@@ -1,190 +1,145 @@
 # coding=utf-8
 
-import io
-import pytest
-
 from lxml import etree
 
-from pubmed_ingester.parsers import ParserXmlPubmedArticle
-
+from tests.bases import TestBase
 from tests.assets.pubmed_sample_xml import pubmed_sample_xml
 from tests.assets.pubmed_sample_parsed import pubmed_sample_parsed
 
 
-@pytest.fixture(name="parser")
-def get_parser():
-    return ParserXmlPubmedArticle()
+class TestParser(TestBase):
 
+    def _parse_sample(self, sample):
+        """ Parses a PubMed article XML document and returns the parsed
+            document.
+        """
 
-@pytest.fixture(name="element_pubmed_article")
-def get_element_pubmed_article():
-    tree = etree.fromstring(pubmed_sample_xml.encode("utf-8"))
-    return tree.find("PubmedArticle")
+        # Perform an XML parsing of the document.
+        element = etree.fromstring(text=sample)
 
+        # Parse the pubmed-article XML element.
+        article = self.parser.parse_pubmed_article(element=element)
 
-@pytest.fixture(name="element_citation")
-def get_element_citation():
-    element_pubmed_article = get_element_pubmed_article()
-    return element_pubmed_article.find("MedlineCitation")
+        return article
 
+    def setUp(self):
+        super(TestParser, self).setUp()
+        tree = etree.fromstring(pubmed_sample_xml.encode("utf-8"))
+        self.article = tree.find("PubmedArticle")
 
-@pytest.fixture(name="element_article")
-def get_element_article():
-    element_citation = get_element_citation()
-    return element_citation.find("Article")
+    def test_parse_pubmed_article(self):
+        """ Tests the `parse_pubmed_article` method of the
+            `ParserXmlPubmedArticle` class.
+        """
 
+        _refr = pubmed_sample_parsed
+        _eval = self.parser.parse_pubmed_article(self.article)
 
-@pytest.fixture(name="element_medline_journal_info")
-def get_element_medline_journal_info():
-    element_citation = get_element_citation()
-    return element_citation.find("MedlineJournalInfo")
+        self.assertEqual(_eval, _refr)
 
+    def test_parse_pubmed_data(self):
+        """ Tests the `parse_pubmed_data` method of the `ParserXmlPubmedArticle`
+            class.
+        """
 
-@pytest.fixture(name="element_journal")
-def get_element_journal():
-    element_article = get_element_article()
-    return element_article.find("Journal")
+        _refr = pubmed_sample_parsed["PubmedData"]
+        _eval = self.parser.parse_pubmed_data(self.article.find("PubmedData"))
 
+        self.assertEqual(_eval, _refr)
 
-def test_parse_pubmed_article(parser, element_pubmed_article):
-    """Tests the `parse_pubmed_article` method of the `ParserXmlPubmedArticle`
-    class."""
+    def test_parse_article_id_list(self):
+        """ Tests the `parse_article_id_list` method of the
+            `ParserXmlPubmedArticle` class.
+        """
 
-    pubmed_article_refr = pubmed_sample_parsed
+        _refr = pubmed_sample_parsed["PubmedData"]["ArticleIdList"]
+        _eval = self.parser.parse_article_id_list(
+            self.article.find("PubmedData").find("ArticleIdList"),
+        )
 
-    pubmed_article_eval = parser.parse_pubmed_article(element_pubmed_article)
+        self.assertEqual(_eval, _refr)
 
-    assert pubmed_article_eval == pubmed_article_refr
+    def test_parse_article_id(self):
+        """ Tests the `parse_article_id` method of the `ParserXmlPubmedArticle`
+            class.
+        """
 
+        _refr = pubmed_sample_parsed["PubmedData"]["ArticleIdList"][
+            "ArticleIds"
+        ][0]["ArticleId"]
 
-def test_parse_pubmed_data(
-    parser,
-    element_pubmed_article,
-):
-    """Tests the `parse_pubmed_data` method of the `ParserXmlPubmedArticle`
-    class."""
+        _eval = self.parser.parse_article_id(
+            self.article.find(
+                "PubmedData"
+            ).find("ArticleIdList").find("ArticleId"),
+        )
 
-    pubmed_data_refr = pubmed_sample_parsed["PubmedData"]
+        self.assertEqual(_eval, _refr)
 
-    pubmed_data_eval = parser.parse_pubmed_data(
-        element_pubmed_article.find("PubmedData"),
-    )
+    def test_parse_medline_citation(self):
+        """ Tests the `parse_medline_citation` method of the
+            `ParserXmlPubmedArticle` class.
+        """
 
-    assert pubmed_data_eval == pubmed_data_refr
+        _refr = pubmed_sample_parsed["MedlineCitation"]
+        _eval = self.parser.parse_medline_citation(
+            self.article.find("MedlineCitation")
+        )
 
+        self.assertEqual(_eval, _refr)
 
-def test_parse_article_id_list(
-    parser,
-    element_pubmed_article,
-):
-    """Tests the `parse_article_id_list` method of the `ParserXmlPubmedArticle`
-    class."""
+    def test_parse_article(self):
+        """ Tests the `parse_article` method of the `ParserXmlPubmedArticle`
+            class.
+        """
 
-    article_id_list_refr = pubmed_sample_parsed["PubmedData"]["ArticleIdList"]
+        _refr = pubmed_sample_parsed["MedlineCitation"]["Article"]
+        _eval = self.parser.parse_article(
+            self.article.find("MedlineCitation").find("Article")
+        )
 
-    article_id_list_eval = parser.parse_article_id_list(
-        element_pubmed_article.find("PubmedData").find("ArticleIdList"),
-    )
+        self.assertEqual(_eval, _refr)
 
-    assert article_id_list_eval == article_id_list_refr
+    def test_parse_journal_issue(self):
+        """ Tests the `parse_journal_issue` method of the
+            `ParserXmlPubmedArticle` class.
+        """
 
+        _refr = pubmed_sample_parsed["MedlineCitation"]["Article"]["Article"][
+            "Journal"
+        ]["JournalIssue"]
+        _eval = self.parser.parse_journal_issue(
+            self.article.find("MedlineCitation").find("Article").find(
+                "Journal"
+            ).find("JournalIssue")
+        )
 
-def test_parse_article_id(
-    parser,
-    element_pubmed_article,
-):
-    """Tests the `parse_article_id` method of the `ParserXmlPubmedArticle`
-    class."""
+        self.assertEqual(_eval, _refr)
 
-    article_id_refr = pubmed_sample_parsed[
-        "PubmedData"
-    ]["ArticleIdList"]["ArticleIds"][0]["ArticleId"]
+    def test_parse_journal(self):
+        """ Tests the `parse_journal` method of the `ParserXmlPubmedArticle`
+            class.
+        """
 
-    article_id_eval = parser.parse_article_id(
-        element_pubmed_article.find(
-            "PubmedData"
-        ).find("ArticleIdList").find("ArticleId"),
-    )
+        _refr = pubmed_sample_parsed["MedlineCitation"]["Article"]["Article"][
+            "Journal"
+        ]
+        _eval = self.parser.parse_journal(
+            self.article.find("MedlineCitation").find("Article").find(
+                "Journal"
+            )
+        )
 
-    assert article_id_eval == article_id_refr
+        self.assertEqual(_eval, _refr)
 
+    def test_parse_medline_journal_info(self):
+        """ Tests the `parse_medline_journal_info` method of the
+            `ParserXmlPubmedArticle` class.
+        """
 
-def test_parse_medline_citation(
-    parser,
-    element_citation,
-):
-    """Tests the `parse_medline_citation` method of the `ParserXmlPubmedArticle`
-    class."""
+        _refr = pubmed_sample_parsed["MedlineCitation"]["MedlineJournalInfo"]
+        _eval = self.parser.parse_medline_journal_info(
+            self.article.find("MedlineCitation").find("MedlineJournalInfo")
+        )
 
-    medline_citation_refr = pubmed_sample_parsed["MedlineCitation"]
-
-    medline_citation_eval = parser.parse_medline_citation(element_citation)
-
-    assert medline_citation_eval == medline_citation_refr
-
-
-def test_parse_article(
-    parser,
-    element_article,
-):
-    """Tests the `parse_article` method of the `ParserXmlPubmedArticle`
-    class."""
-
-    article_refr = pubmed_sample_parsed["MedlineCitation"]["Article"]
-
-    article_eval = parser.parse_article(element_article)
-
-    assert article_eval == article_refr
-
-
-def test_parse_journal_issue(parser, element_journal):
-    """Tests the `parse_journal_issue` method of the `ParserXmlPubmedArticle`
-    class."""
-
-    journal_issue_refr = pubmed_sample_parsed[
-        "MedlineCitation"
-    ]["Article"]["Article"]["Journal"]["JournalIssue"]
-
-    element_journal_issue = element_journal.find("JournalIssue")
-    journal_issue_eval = parser.parse_journal_issue(element_journal_issue)
-
-    keys = ["JournalIssue", "CitedMedium"]
-    for key in keys:
-        assert journal_issue_eval[key] == journal_issue_refr[key]
-
-
-def test_parse_journal(parser, element_journal):
-    """Tests the `parse_journal` method of the `ParserXmlPubmedArticle`
-    class."""
-
-    journal_refr = pubmed_sample_parsed[
-        "MedlineCitation"
-    ]["Article"]["Article"]["Journal"]
-
-    journal_eval = parser.parse_journal(element_journal)
-
-    keys = ["ISSN", "Title", "ISOAbbreviation"]
-    for key in keys:
-        assert journal_eval[key] == journal_refr[key]
-
-
-def test_parse_medline_journal_info(
-    parser,
-    element_citation,
-):
-    """Tests the `parse_medline_journal_info` method of the
-    `ParserXmlPubmedArticle` class."""
-
-    medline_journal_info_refr = pubmed_sample_parsed[
-        "MedlineCitation"
-    ]["MedlineJournalInfo"]
-
-    medline_journal_info_eval = parser.parse_medline_journal_info(
-        element_citation.find("MedlineJournalInfo"),
-    )
-
-    keys = ["Country", "ISSNLinking", "MedlineTA", "NlmUniqueID"]
-
-    for key in keys:
-        assert medline_journal_info_eval[key] == medline_journal_info_refr[key]
-
+        self.assertEqual(_eval, _refr)

@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
 
     config.vm.network :forwarded_port, guest: 22, host: 2401, id: "ssh", auto_correct: false
-    config.vm.network :forwarded_port, guest: 5432, host: 5432, id: "postgres"
+    config.vm.network :forwarded_port, guest: 5432, host: 5438, id: "postgres"
 
     # provision with Ansible
     config.vm.provision :ansible do |ansible|

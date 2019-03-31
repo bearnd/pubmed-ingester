@@ -543,6 +543,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         affiliation_identifiers = []
         affiliation_identifier_sources = []
         affiliations = []
+        affiliation_canonical_ids = []
         md5s = []
 
         doc_ident = document["Identifier"]
@@ -557,12 +558,14 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
                 affiliation.affiliation_identifier_source
             )
             affiliations.append(affiliation.affiliation)
+            affiliation_canonical_ids.append(None)
             md5s.append(affiliation.md5)
 
         affiliation_obj_ids = self.dal.biodi_affiliations(
             affiliation_identifiers=affiliation_identifiers,
             affiliation_identifier_sources=affiliation_identifier_sources,
             affiliations=affiliations,
+            affiliation_canonical_ids=affiliation_canonical_ids,
             md5s=md5s
         )
 
@@ -579,6 +582,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         _author_ids = []
         _affiliation_ids = []
         _ordinances = []
+        _affiliation_canonical_ids = []
         for ordinance, (author_id, document) in enumerate(
             zip(author_ids, documents)
         ):
@@ -598,12 +602,14 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
                 _author_ids.append(author_id)
                 _affiliation_ids.append(_affiliation_id)
                 _ordinances.append(ordinance + 1)
+                _affiliation_canonical_ids.append(None)
 
         self.dal.biodi_article_author_affiliations(
             article_id=article_id,
             author_ids=_author_ids,
             affiliation_ids=_affiliation_ids,
-            ordinances=_ordinances
+            affiliation_canonical_ids=_affiliation_canonical_ids,
+            ordinances=_ordinances,
         )
 
     @log_ingestion_of_documents(document_name="Grant")

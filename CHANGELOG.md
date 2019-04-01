@@ -1,5 +1,20 @@
 ## Changelog
 
+### v0.6.0
+
+Issue No. 202:
+
+- Added the other schemata in the PG configuration to allow for the entire ORM to be reflected in the DB.
+- Updated the `Makefile` to use `unittest` instead of `pytest`.
+- Added Pubmed article assets for unit-testing.
+- Added new integration tests against the newly added assets.
+- Ported the parser unit-tests from pytest to unittest.
+- Fixed issue in the different method of the `IngesterDocumentPubmedArticle` class as outdated method of enumeration-member retrieval were being used.
+- Renamed the `ingest_chemicals` method of the `IngesterDocumentPubmedArticle` to `retrieve_chemicals` as the MeSH descriptors representing chemicals are no longer stored but rather retrieved from the `mesh.descriptors` table. This method is now used to retrieve the PK IDs and use those in the `biodi_citation_chemicals` method.
+- Updated the `ingest_author_affiliations` and `ingest_article_author_affiliations` methods of the `IngesterDocumentPubmedArticle` class to store NULL values under the `affiliation_canonical_id` columns.
+- Renamed the `ingest_descriptors` and `ingest_qualifiers` methods of the `IngesterDocumentPubmedArticle` to `retrieve_descriptors` and `retrieve_qualifiers` as the MeSH descriptors and qualifiers are no longer stored but rather retrieved from the `mesh.descriptors` table. These methods are now used to retrieve the PK IDs and use those in the `ingest_mesh_headings` method.
+- Added a script to render an ingestion script for the baseline files.
+
 ### v0.5.1
 
 - Updated the `IngesterDocumentPubmedArticle` class to convert enumeration values to their PostgreSQL-compatible format prior to retrieving the enum member.

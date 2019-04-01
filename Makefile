@@ -48,11 +48,11 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 
 test: ## run tests quickly with the default Python
-	python -m pytest tests
+	python -m unittest tests/test_*.py
 
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source pubmed_ingester -m pytest
+	coverage run --source pubmed_ingester -m unittest tests/test_*.py
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html

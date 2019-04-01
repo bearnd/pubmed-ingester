@@ -18,6 +18,8 @@ from fform.orm_pubmed import Article
 from fform.orm_pubmed import Databank
 from fform.orm_pubmed import AccessionNumber
 from fform.orm_pubmed import Grant
+from fform.orm_mt import Descriptor
+from fform.orm_mt import Qualifier
 from pubmed_ingester.utils import log_ingestion_of_document
 from pubmed_ingester.utils import log_ingestion_of_documents
 
@@ -71,28 +73,24 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         return value
 
-    @log_ingestion_of_documents(document_name="Chemical")
-    def ingest_chemicals(
+    def retrieve_chemicals(
         self,
         documents: List[Dict]
     ) -> List[int]:
 
-        nums_registries = []
-        uids = []
-        chemicals = []
-        for entry in documents:
-            data = entry["Chemical"]
-            nums_registries.append(data["RegistryNumber"])
-            uids.append(data["NameOfSubstance"]["UI"])
-            chemicals.append(data["NameOfSubstance"]["NameOfSubstance"])
+        descriptor_obj_ids = []
+        for document in documents:
+            ui = document["Chemical"]["NameOfSubstance"]["UI"]
+            descriptor = self.dal.get_by_attr(
+                orm_class=Descriptor,
+                attr_name="ui",
+                attr_value=ui,
+            )  # type: Descriptor
 
-        chemical_obj_ids = self.dal.biodi_chemicals(
-            nums_registries=nums_registries,
-            uids=uids,
-            chemicals=chemicals
-        )
+            if descriptor:
+                descriptor_obj_ids.append(descriptor.descriptor_id)
 
-        return chemical_obj_ids
+        return descriptor_obj_ids
 
     @log_ingestion_of_document(document_name="JournalInfo")
     def ingest_journal_info(
@@ -117,7 +115,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         journal_obj = Journal()
         journal_obj.issn = document["ISSN"]["ISSN"]
-        journal_obj.issn_type = JournalIssnType.get_enum(
+        journal_obj.issn_type = JournalIssnType.get_member(
             value=self._convert_enum_value(document["ISSN"]["IssnType"]),
         )
         journal_obj.title = document["Title"]
@@ -153,7 +151,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
             abstract_text = AbstractText()
             abstract_text.label = data["Label"]
-            abstract_text.category = AbstractTextCategory.get_enum(
+            abstract_text.category = AbstractTextCategory.get_member(
                 value=self._convert_enum_value(data["NlmCategory"]),
             )
             abstract_text.text = data["AbstractText"]
@@ -185,7 +183,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         for entry in documents:
             data = entry["ArticleId"]
 
-            identifier_types.append(ArticleIdentifierType.get_enum(
+            identifier_types.append(ArticleIdentifierType.get_member(
                 value=self._convert_enum_value(data["IdType"]),
             ))
             identifiers.append(data["ArticleId"])
@@ -258,7 +256,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         article_obj.publication_month = publication_month
         article_obj.publication_day = publication_day
         article_obj.date_published = date_published
-        article_obj.publication_model = ArticlePubModel.get_enum(
+        article_obj.publication_model = ArticlePubModel.get_member(
             value=self._convert_enum_value(document["PubModel"]),
         )
         article_obj.journal_id = journal_id
@@ -287,41 +285,41 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         return article_id
 
-    @log_ingestion_of_documents(document_name="Descriptor")
-    def ingest_descriptors(
+    def retrieve_descriptors(
         self,
         documents: List[Dict]
     ) -> List[int]:
 
-        uids = []
-        descriptors = []
+        descriptor_obj_ids = []
         for document in documents:
-            uids.append(document["UI"])
-            descriptors.append(document["DescriptorName"])
+            ui = document["UI"]
+            descriptor = self.dal.get_by_attr(
+                orm_class=Descriptor,
+                attr_name="ui",
+                attr_value=ui,
+            )  # type: Descriptor
 
-        descriptor_obj_ids = self.dal.biodi_descriptors(
-            uids=uids,
-            descriptors=descriptors
-        )
+            if descriptor:
+                descriptor_obj_ids.append(descriptor.descriptor_id)
 
         return descriptor_obj_ids
 
-    @log_ingestion_of_documents(document_name="Qualifier")
-    def ingest_qualifiers(
+    def retrieve_qualifiers(
         self,
         documents: List[Dict]
     ) -> List[int]:
 
-        uids = []
-        qualifiers = []
+        qualifier_obj_ids = []
         for document in documents:
-            uids.append(document["QualifierName"]["UI"])
-            qualifiers.append(document["QualifierName"]["QualifierName"])
+            ui = document["QualifierName"]["UI"]
+            qualifier = self.dal.get_by_attr(
+                orm_class=Qualifier,
+                attr_name="ui",
+                attr_value=ui,
+            )  # type: Qualifier
 
-        qualifier_obj_ids = self.dal.biodi_qualifiers(
-            uids=uids,
-            qualifiers=qualifiers
-        )
+            if qualifier:
+                qualifier_obj_ids.append(qualifier.qualifier_id)
 
         return qualifier_obj_ids
 
@@ -376,6 +374,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         citation_id: int,
         documents: List[Dict]
     ):
+
         documents_descriptors = []
         documents_qualifiers = []
         for document in documents:
@@ -386,12 +385,15 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
             for document_qualifier in data["QualifierNames"]:
                 documents_qualifiers.append(document_qualifier)
 
-        _descriptor_ids = self.ingest_descriptors(
+        _descriptor_ids = self.retrieve_descriptors(
             documents=documents_descriptors
         )
 
+        if not _descriptor_ids:
+            return None
+
         if documents_qualifiers:
-            _qualifier_ids = self.ingest_qualifiers(
+            _qualifier_ids = self.retrieve_qualifiers(
                 documents=documents_qualifiers
             )
         else:
@@ -403,6 +405,10 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         are_qualifiers_major = []
         idx_qualifier = 0
         for idx_descriptor, document in enumerate(documents):
+
+            if not _descriptor_ids[idx_descriptor]:
+                continue
+
             data = document["MeshHeading"]
             document_descriptor = data.get("DescriptorName")
 
@@ -545,6 +551,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         affiliation_identifiers = []
         affiliation_identifier_sources = []
         affiliations = []
+        affiliation_canonical_ids = []
         md5s = []
 
         doc_ident = document["Identifier"]
@@ -559,12 +566,14 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
                 affiliation.affiliation_identifier_source
             )
             affiliations.append(affiliation.affiliation)
+            affiliation_canonical_ids.append(None)
             md5s.append(affiliation.md5)
 
         affiliation_obj_ids = self.dal.biodi_affiliations(
             affiliation_identifiers=affiliation_identifiers,
             affiliation_identifier_sources=affiliation_identifier_sources,
             affiliations=affiliations,
+            affiliation_canonical_ids=affiliation_canonical_ids,
             md5s=md5s
         )
 
@@ -581,6 +590,7 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
         _author_ids = []
         _affiliation_ids = []
         _ordinances = []
+        _affiliation_canonical_ids = []
         for ordinance, (author_id, document) in enumerate(
             zip(author_ids, documents)
         ):
@@ -600,12 +610,14 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
                 _author_ids.append(author_id)
                 _affiliation_ids.append(_affiliation_id)
                 _ordinances.append(ordinance + 1)
+                _affiliation_canonical_ids.append(None)
 
         self.dal.biodi_article_author_affiliations(
             article_id=article_id,
             author_ids=_author_ids,
             affiliation_ids=_affiliation_ids,
-            ordinances=_ordinances
+            affiliation_canonical_ids=_affiliation_canonical_ids,
+            ordinances=_ordinances,
         )
 
     @log_ingestion_of_documents(document_name="Grant")
@@ -745,12 +757,13 @@ class IngesterDocumentPubmedArticle(IngesterDocumentBase):
 
         # Ingest `Chemical` documents.
         if chemical_documents:
-            chemical_ids = self.ingest_chemicals(documents=chemical_documents)
+            chemical_ids = self.retrieve_chemicals(documents=chemical_documents)
 
-            self.dal.biodi_citation_chemicals(
-                citation_id=citation_id,
-                chemical_ids=chemical_ids
-            )
+            if chemical_ids:
+                self.dal.biodi_citation_chemicals(
+                    citation_id=citation_id,
+                    chemical_ids=chemical_ids
+                )
 
         # Ingest `Author` documents.
         if author_documents:

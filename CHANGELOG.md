@@ -1,5 +1,9 @@
 ## Changelog
 
+### v0.6.1
+
+- Fixed bug in the `parse_grant` method where null values actually had a string value of `NULL` causing errors with the DB field as the acronym is supposed to have a maximum length of 2.
+
 ### v0.6.0
 
 Issue No. 202:

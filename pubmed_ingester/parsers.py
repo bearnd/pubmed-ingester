@@ -509,14 +509,17 @@ class ParserXmlPubmedArticle(ParserXmlBase):
         if element is None:
             return {}
 
-        databank = {
+        grant = {
             "GrantID": self._et(element.find("GrantID")),
             "Acronym": self._et(element.find("Acronym")),
             "Agency": self._et(element.find("Agency")),
             "Country": self._et(element.find("Country")),
         }
 
-        return databank
+        if grant["Acronym"] == "NULL":
+            grant["Acronym"] = None
+
+        return grant
 
     def parse_grant_list(
         self,
